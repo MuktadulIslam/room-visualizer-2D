@@ -1,9 +1,8 @@
 import React, { useRef, Suspense } from 'react';
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
-import { OrbitControls, Plane, Text } from '@react-three/drei';
+import { OrbitControls, Plane } from '@react-three/drei';
 import { TextureLoader, RepeatWrapping } from 'three';
 import { useTexture } from '@/context/TextureContext';
-import Loading from './Loading';
 
 const repetitionThreshold = 1 / 3;
 
@@ -21,7 +20,6 @@ const Wall = ({ height, width, position }: { height: number; width: number; posi
         );
     }
 
-    // Use useLoader inside Suspense boundary
     const texture = useLoader(TextureLoader, wallTexture.texture_img);
 
     // Configure texture mapping

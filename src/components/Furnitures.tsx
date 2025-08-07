@@ -3,27 +3,29 @@ import { useTexture } from '@/context/TextureContext';
 export default function Furnitures() {
   const { selectionType, setSelectionType, wallTexture, floorTexture } = useTexture();
 
-
-  const getImageSrc = () => {
-    if (wallTexture?.is_glossy || floorTexture?.is_glossy) {
-      return "/furnitures/wall_glossy_floor_glossy.webp";
-    } else {
-      return "/furnitures/wall_matt_floor_matt.webp";
-    }
-  };
+  console.log(wallTexture)
 
   return (
     <div className="w-full h-full bg-transparent absolute top-0 left-0 z-40">
-      <img
-        src={getImageSrc()}
-        alt="Room"
-        className="w-full h-full bg-transparent"
-      />
+      <div className="w-full h-[40%] absolute bottom-0">
+        <img
+          src={floorTexture?.is_glossy ? "/furnitures/wall_glossy_floor_glossy.webp" : "/furnitures/wall_matt_floor_matt.webp"}
+          alt="Room"
+          className="w-full h-full bg-transparent object-cover object-bottom"
+        />
+      </div>
+      <div className="w-full h-[60%] absolute top-0">
+        <img
+          src={wallTexture?.is_glossy ? "/furnitures/wall_glossy_floor_glossy.webp" : "/furnitures/wall_matt_floor_matt.webp"}
+          alt="Room"
+          className="w-full h-full bg-transparent object-cover object-top"
+        />
+      </div>
 
       {/* Wall Selection Button */}
       <button
         onClick={() => setSelectionType('wall')}
-        className={`px-5 py-1 absolute top-[25%] left-[48%] font-semibold shadow-sm shadow-gray-700 rounded-full transition-all duration-200 flex items-center gap-2 ${selectionType === 'wall'
+        className={`px-5 py-1 absolute top-[25%] left-[48%] z-50 font-semibold shadow-sm shadow-gray-700 rounded-full transition-all duration-200 flex items-center gap-2 ${selectionType === 'wall'
           ? 'bg-blue-500 text-white'
           : 'bg-white text-black hover:bg-gray-100'
           }`}
@@ -39,7 +41,7 @@ export default function Furnitures() {
       {/* Floor Selection Button */}
       <button
         onClick={() => setSelectionType('floor')}
-        className={`px-5 py-1 absolute bottom-[11%] left-[25%] font-semibold shadow-sm shadow-gray-700 rounded-full transition-all duration-200 flex items-center gap-2 ${selectionType === 'floor'
+        className={`px-5 py-1 absolute bottom-[11%] left-[25%] z-50 font-semibold shadow-sm shadow-gray-700 rounded-full transition-all duration-200 flex items-center gap-2 ${selectionType === 'floor'
           ? 'bg-blue-500 text-white'
           : 'bg-white text-black hover:bg-gray-100'
           }`}
