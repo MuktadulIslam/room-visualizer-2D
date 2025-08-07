@@ -77,7 +77,7 @@ export const textures: Texture[] = [
     name: 'Tiles-1',
     size: [30, 30],
     is_glossy: true,
-    type: 'floor' // Wood can be used for both walls and floors
+    type: 'both' // Wood can be used for both walls and floors
   },
   {
     id: '2',

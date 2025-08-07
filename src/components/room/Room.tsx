@@ -9,12 +9,12 @@ const repetitionThreshold = 1 / 3;
 
 // Wall Component
 const Wall = ({ height, width, position }: { height: number; width: number; position: [number, number, number] }) => {
-    const { wallTexture } = useTexture();
+    const { wallTexture, wallColor } = useTexture();
 
-    // Load texture if available
-    const texture = useLoader(TextureLoader, wallTexture?.texture_img || '/textures/floor/tiles1_glossy.webp');
+    // Only load texture if wallTexture exists
+    const texture = wallTexture ? useLoader(TextureLoader, wallTexture.texture_img) : null;
 
-    // Configure texture mapping
+    // Configure texture mapping only if texture exists
     if (texture && wallTexture) {
         // Calculate repeat based on wall dimensions and texture size
         const repeatX = (width * 100) / wallTexture.size[0] * repetitionThreshold; // Convert to cm and calculate repeats
@@ -27,16 +27,12 @@ const Wall = ({ height, width, position }: { height: number; width: number; posi
     }
 
     return (
-        <Suspense fallback={<Loading />}>
-            <Plane
-                args={[width, height]}
-                position={position}
-            >
-                <meshStandardMaterial
-                    map={texture}
-                />
-            </Plane>
-        </Suspense>
+        <Plane
+            args={[width, height]}
+            position={position}
+        >
+            <meshStandardMaterial map={texture} />
+        </Plane>
     );
 };
 
@@ -52,14 +48,6 @@ const Floor = ({ length, width }: { length: number; width: number }) => {
         // Calculate repeat based on floor dimensions and texture size
         const repeatX = (length * 100) / floorTexture.size[0] * repetitionThreshold; // Convert to cm and calculate repeats
         const repeatY = (width * 100) / floorTexture.size[1] * repetitionThreshold;
-
-        texture.wrapS = RepeatWrapping;
-        texture.wrapT = RepeatWrapping;
-        texture.repeat.set(repeatX, repeatY);
-    } else if (texture) {
-        // Default texture configuration (assuming first texture size)
-        const repeatX = (length * 100) / 30; // Default 30cm tiles
-        const repeatY = (width * 100) / 30;
 
         texture.wrapS = RepeatWrapping;
         texture.wrapT = RepeatWrapping;
