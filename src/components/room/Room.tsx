@@ -1,6 +1,6 @@
-import React, {  useRef } from 'react';
+import React, { useRef, Suspense } from 'react';
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
-import { OrbitControls, Plane } from '@react-three/drei';
+import { OrbitControls, Plane, Text } from '@react-three/drei';
 import { TextureLoader, RepeatWrapping } from 'three';
 import { useTexture } from '@/context/TextureContext';
 import Loading from './Loading';
@@ -11,31 +11,36 @@ const repetitionThreshold = 1 / 3;
 const Wall = ({ height, width, position }: { height: number; width: number; position: [number, number, number] }) => {
     const { wallTexture, wallColor } = useTexture();
 
-    // Only load texture if wallTexture exists
-    const texture = wallTexture ? useLoader(TextureLoader, wallTexture.texture_img) : null;
+    console.log('Wall - wallTexture:', wallTexture);
+    if (!wallTexture?.texture_img) {
+        return (
+            <mesh position={position}>
+                <planeGeometry args={[width, height]} />
+                <meshBasicMaterial color={wallColor?.hex || '#cccccc'} />
+            </mesh>
+        );
+    }
 
-    // Configure texture mapping only if texture exists
-    if (texture && wallTexture) {
-        // Calculate repeat based on wall dimensions and texture size
-        const repeatX = (width * 100) / wallTexture.size[0] * repetitionThreshold; // Convert to cm and calculate repeats
+    // Use useLoader inside Suspense boundary
+    const texture = useLoader(TextureLoader, wallTexture.texture_img);
+
+    // Configure texture mapping
+    if (texture && wallTexture.size) {
+        const repeatX = (width * 100) / wallTexture.size[0] * repetitionThreshold;
         const repeatY = (height * 100) / wallTexture.size[1] * repetitionThreshold;
-        console.log(repeatX, repeatY)
+        console.log('Wall texture repeats:', repeatX, repeatY);
 
         texture.wrapS = RepeatWrapping;
         texture.wrapT = RepeatWrapping;
         texture.repeat.set(repeatX, repeatY);
     }
+    console.log("texture: ", texture);
 
     return (
-        <Plane
-            args={[width, height]}
-            position={position}
-        >
-            <meshStandardMaterial
-                map={texture ? texture : null}
-                color={wallColor?.hex || '#ffffff'}
-            />
-        </Plane>
+        <mesh position={position}>
+            <planeGeometry args={[width, height]} />
+            <meshStandardMaterial map={texture} />
+        </mesh>
     );
 };
 
@@ -49,7 +54,7 @@ const Floor = ({ length, width }: { length: number; width: number }) => {
     // Configure texture mapping
     if (texture && floorTexture) {
         // Calculate repeat based on floor dimensions and texture size
-        const repeatX = (length * 100) / floorTexture.size[0] * repetitionThreshold; // Convert to cm and calculate repeats
+        const repeatX = (length * 100) / floorTexture.size[0] * repetitionThreshold;
         const repeatY = (width * 100) / floorTexture.size[1] * repetitionThreshold;
 
         texture.wrapS = RepeatWrapping;
@@ -63,9 +68,7 @@ const Floor = ({ length, width }: { length: number; width: number }) => {
             rotation={[-Math.PI / 2.3, 0, 0]}
             position={[0, 0, 0]}
         >
-            <meshStandardMaterial
-                map={texture}
-            />
+            <meshStandardMaterial map={texture} />
         </Plane>
     );
 };
@@ -75,7 +78,7 @@ const CameraController = () => {
 
     useFrame((state) => {
         if (controlsRef.current) {
-            console.log(state.camera)
+            console.log(state.camera);
         }
     });
 
@@ -86,15 +89,18 @@ const CameraController = () => {
 const Scene = () => {
     return (
         <>
-            <ambientLight intensity={1.8} />
-            <directionalLight position={[10, 10, 5]} intensity={0.5} />
-
-            <Floor length={14} width={6} />
-            <Wall
-                height={8}
-                width={14}
-                position={[0.35, 4.5, -3]}
-            />
+            <ambientLight intensity={2} />
+            <Suspense>
+                <Floor length={14} width={6} />
+            </Suspense>
+            <Suspense>
+                <Wall
+                    height={8}
+                    width={14}
+                    position={[0.35, 4.5, -3]}
+                />
+            </Suspense>
+            {/* <CameraController /> */}
         </>
     );
 };
@@ -111,7 +117,9 @@ export default function Room() {
             }}
             className="w-full h-full"
         >
-            <Scene />
+            <Suspense>
+                <Scene />
+            </Suspense>
         </Canvas>
     );
 }

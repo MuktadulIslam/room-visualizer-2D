@@ -1,25 +1,19 @@
 import { useTexture } from '@/context/TextureContext';
 
 export default function Furnitures() {
-  const { selectionType, getSelectedTexture, setSelectionType } = useTexture();
-  
-  const selectedTexture = getSelectedTexture();
+  const { selectionType, setSelectionType, wallTexture, floorTexture } = useTexture();
+
 
   const getImageSrc = () => {
-    if (selectedTexture) {
-      // If a texture is selected
-      if (selectedTexture.is_glossy) {
-        return "/furnitures/wall_glossy_floor_glossy.webp";
-      } else {
-        return "/furnitures/wall_matt_floor_matt.webp";
-      }
+    if (wallTexture?.is_glossy || floorTexture?.is_glossy) {
+      return "/furnitures/wall_glossy_floor_glossy.webp";
+    } else {
+      return "/furnitures/wall_matt_floor_matt.webp";
     }
-    // Default image
-    return "/furnitures/wall_matt_floor_matt.webp";
   };
 
   return (
-    <div className="w-full h-full bg-transparent absolute top-0 left-0 z-50">
+    <div className="w-full h-full bg-transparent absolute top-0 left-0 z-40">
       <img
         src={getImageSrc()}
         alt="Room"
@@ -27,13 +21,12 @@ export default function Furnitures() {
       />
 
       {/* Wall Selection Button */}
-      <button 
+      <button
         onClick={() => setSelectionType('wall')}
-        className={`px-5 py-1 absolute top-[25%] left-[48%] font-semibold shadow-sm shadow-gray-700 rounded-full transition-all duration-200 flex items-center gap-2 ${
-          selectionType === 'wall' 
-            ? 'bg-blue-500 text-white' 
-            : 'bg-white text-black hover:bg-gray-100'
-        }`}
+        className={`px-5 py-1 absolute top-[25%] left-[48%] font-semibold shadow-sm shadow-gray-700 rounded-full transition-all duration-200 flex items-center gap-2 ${selectionType === 'wall'
+          ? 'bg-blue-500 text-white'
+          : 'bg-white text-black hover:bg-gray-100'
+          }`}
       >
         {selectionType === 'wall' && (
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -44,13 +37,12 @@ export default function Furnitures() {
       </button>
 
       {/* Floor Selection Button */}
-      <button 
+      <button
         onClick={() => setSelectionType('floor')}
-        className={`px-5 py-1 absolute bottom-[11%] left-[25%] font-semibold shadow-sm shadow-gray-700 rounded-full transition-all duration-200 flex items-center gap-2 ${
-          selectionType === 'floor' 
-            ? 'bg-blue-500 text-white' 
-            : 'bg-white text-black hover:bg-gray-100'
-        }`}
+        className={`px-5 py-1 absolute bottom-[11%] left-[25%] font-semibold shadow-sm shadow-gray-700 rounded-full transition-all duration-200 flex items-center gap-2 ${selectionType === 'floor'
+          ? 'bg-blue-500 text-white'
+          : 'bg-white text-black hover:bg-gray-100'
+          }`}
       >
         {selectionType === 'floor' && (
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
