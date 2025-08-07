@@ -1,4 +1,4 @@
-import React, { Suspense, useRef } from 'react';
+import React, {  useRef } from 'react';
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Plane } from '@react-three/drei';
 import { TextureLoader, RepeatWrapping } from 'three';
@@ -31,7 +31,10 @@ const Wall = ({ height, width, position }: { height: number; width: number; posi
             args={[width, height]}
             position={position}
         >
-            <meshStandardMaterial map={texture} />
+            <meshStandardMaterial
+                map={texture ? texture : null}
+                color={wallColor?.hex || '#ffffff'}
+            />
         </Plane>
     );
 };
@@ -55,17 +58,15 @@ const Floor = ({ length, width }: { length: number; width: number }) => {
     }
 
     return (
-        <Suspense fallback={<Loading />}>
-            <Plane
-                args={[length, width]}
-                rotation={[-Math.PI / 2.3, 0, 0]}
-                position={[0, 0, 0]}
-            >
-                <meshStandardMaterial
-                    map={texture}
-                />
-            </Plane>
-        </Suspense>
+        <Plane
+            args={[length, width]}
+            rotation={[-Math.PI / 2.3, 0, 0]}
+            position={[0, 0, 0]}
+        >
+            <meshStandardMaterial
+                map={texture}
+            />
+        </Plane>
     );
 };
 
@@ -85,7 +86,7 @@ const CameraController = () => {
 const Scene = () => {
     return (
         <>
-            <ambientLight intensity={2.5} />
+            <ambientLight intensity={1.8} />
             <directionalLight position={[10, 10, 5]} intensity={0.5} />
 
             <Floor length={14} width={6} />
