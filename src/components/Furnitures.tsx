@@ -7,20 +7,20 @@ export default function Furnitures() {
 
   return (
     <div className="w-full h-full bg-transparent absolute top-0 left-0 z-40">
-      <div className="w-full h-[40%] absolute bottom-0">
+      {/* <div className="w-full h-[40%] absolute bottom-0">
         <img
           src={floorTexture?.is_glossy ? "/furnitures/wall_glossy_floor_glossy.webp" : "/furnitures/wall_matt_floor_matt.webp"}
           alt="Room"
           className="w-full h-full bg-transparent object-cover object-bottom"
         />
       </div>
-      <div className="w-full h-[60%] absolute top-0">
+      <div className="w-full h-[60%] absolute top-0"> */}
         <img
-          src={wallTexture?.is_glossy ? "/furnitures/wall_glossy_floor_glossy.webp" : "/furnitures/wall_matt_floor_matt.webp"}
+          src={wallTexture?.is_glossy || floorTexture?.is_glossy ? "/furnitures/wall_glossy_floor_glossy.webp" : "/furnitures/wall_matt_floor_matt.webp"}
           alt="Room"
           className="w-full h-full bg-transparent object-cover object-top"
         />
-      </div>
+      {/* </div> */}
 
       {/* Wall Selection Button */}
       <button
