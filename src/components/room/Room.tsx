@@ -1,6 +1,6 @@
-import React, { useRef, Suspense } from 'react';
+import React, { Suspense, useRef } from 'react';
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
-import { OrbitControls, Plane } from '@react-three/drei';
+import {  OrbitControls, Plane } from '@react-three/drei';
 import { TextureLoader, RepeatWrapping } from 'three';
 import { useTexture } from '@/context/TextureContext';
 
@@ -11,6 +11,10 @@ const Wall = ({ height, width, position }: { height: number; width: number; posi
     const { wallTexture, wallColor } = useTexture();
 
     console.log('Wall - wallTexture:', wallTexture);
+    
+    // Always call useLoader hook at the top level with a fallback texture
+    const texture = useLoader(TextureLoader, wallTexture?.texture_img || '/textures/floor/tiles1_glossy.webp');
+
     if (!wallTexture?.texture_img) {
         return (
             <mesh position={position}>
@@ -19,8 +23,6 @@ const Wall = ({ height, width, position }: { height: number; width: number; posi
             </mesh>
         );
     }
-
-    const texture = useLoader(TextureLoader, wallTexture.texture_img);
 
     // Configure texture mapping
     if (texture && wallTexture.size) {
@@ -46,7 +48,7 @@ const Wall = ({ height, width, position }: { height: number; width: number; posi
 const Floor = ({ length, width }: { length: number; width: number }) => {
     const { floorTexture } = useTexture();
 
-    // Load texture if available, default to first texture
+    // Always call useLoader hook with a fallback texture
     const texture = useLoader(TextureLoader, floorTexture?.texture_img || '/textures/floor/tiles1_glossy.webp');
 
     // Configure texture mapping
@@ -71,17 +73,17 @@ const Floor = ({ length, width }: { length: number; width: number }) => {
     );
 };
 
-const CameraController = () => {
-    const controlsRef = useRef<any>(null);
+// const CameraController = () => {
+//     const controlsRef = useRef<any>(null);
 
-    useFrame((state) => {
-        if (controlsRef.current) {
-            console.log(state.camera);
-        }
-    });
+//     useFrame((state) => {
+//         if (controlsRef.current) {
+//             console.log(state.camera);
+//         }
+//     });
 
-    return <OrbitControls ref={controlsRef} enablePan={true} enableDamping={false} dampingFactor={0} />;
-};
+//     return <OrbitControls ref={controlsRef} enablePan={true} enableDamping={false} dampingFactor={0} />;
+// };
 
 // Main Scene Component
 const Scene = () => {
@@ -98,7 +100,7 @@ const Scene = () => {
                     position={[0.35, 4.5, -3]}
                 />
             </Suspense>
-            {/* <CameraController /> */}
+             {/* <CameraController /> */}
         </>
     );
 };
