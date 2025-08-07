@@ -16,6 +16,28 @@ export interface Texture {
 
 export type SelectionType = 'wall' | 'floor' | null;
 
+// Color interface for wall colors
+export interface WallColor {
+  id: string;
+  name: string;
+  hex: string;
+  isCustom?: boolean; // Flag for custom colors
+}
+
+// Predefined wall colors
+export const wallColors: WallColor[] = [
+  { id: 'offwhite', name: 'Off White', hex: '#f8f8ff' },
+  { id: 'white', name: 'Pure White', hex: '#ffffff' },
+  { id: 'beige', name: 'Beige', hex: '#f5f5dc' },
+  { id: 'lightgray', name: 'Light Gray', hex: '#d3d3d3' },
+  { id: 'warmgray', name: 'Warm Gray', hex: '#8b8680' },
+  { id: 'cream', name: 'Cream', hex: '#fffdd0' },
+  { id: 'lightblue', name: 'Light Blue', hex: '#add8e6' },
+  { id: 'lightgreen', name: 'Light Green', hex: '#90ee90' },
+  { id: 'lavender', name: 'Lavender', hex: '#e6e6fa' },
+  { id: 'peach', name: 'Peach', hex: '#ffcba4' },
+];
+
 interface TextureContextType {
   // Selection state
   selectionType: SelectionType;
@@ -27,12 +49,23 @@ interface TextureContextType {
   setWallTexture: (texture: Texture | null) => void;
   setFloorTexture: (texture: Texture | null) => void;
   
+  // Wall color support
+  wallColor: WallColor | null;
+  setWallColor: (color: WallColor | null) => void;
+  
   // Helper methods
   getSelectedTexture: () => Texture | null;
+  getSelectedWallColor: () => WallColor | null;
   selectTexture: (texture: Texture) => void;
+  selectWallColor: (color: WallColor) => void;
+  selectCustomWallColor: (hex: string) => void; // New method for custom colors
   toggleSelection: (type: SelectionType) => void;
   getAvailableTextures: () => Texture[]; // Get textures available for current selection
   canApplyTexture: (texture: Texture) => boolean; // Check if texture can be applied to current selection
+  
+  // Check if wall has color or texture
+  hasWallColor: () => boolean;
+  hasWallTexture: () => boolean;
 }
 
 // Sample texture data
@@ -128,17 +161,26 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [selectionType, setSelectionType] = useState<SelectionType>('floor'); // Default to floor
   const [wallTexture, setWallTexture] = useState<Texture | null>(null);
   const [floorTexture, setFloorTexture] = useState<Texture | null>(null);
+  const [wallColor, setWallColor] = useState<WallColor | null>(null);
 
-  // Set default textures on mount
+  // Set default colors/textures on mount
   useEffect(() => {
+    // Set default off-white color for walls (no default texture)
+    if (!wallColor && !wallTexture) {
+      const defaultWallColor = wallColors.find(c => c.id === 'offwhite');
+      if (defaultWallColor) {
+        setWallColor(defaultWallColor);
+      }
+    }
+
+    // Set default texture for floor
     if (!floorTexture) {
-      // Set first texture as default floor texture
       const defaultFloorTexture = textures.find(t => t.type === 'floor' || t.type === 'both');
       if (defaultFloorTexture) {
         setFloorTexture(defaultFloorTexture);
       }
     }
-  }, [floorTexture]);
+  }, [wallColor, wallTexture, floorTexture]);
 
   const getSelectedTexture = (): Texture | null => {
     if (selectionType === 'wall') return wallTexture;
@@ -146,14 +188,38 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
     return null;
   };
 
+  const getSelectedWallColor = (): WallColor | null => {
+    return wallColor;
+  };
+
   const selectTexture = (texture: Texture) => {
     if (!canApplyTexture(texture)) return;
     
     if (selectionType === 'wall') {
       setWallTexture(texture);
+      // Clear wall color when texture is applied
+      setWallColor(null);
     } else if (selectionType === 'floor') {
       setFloorTexture(texture);
     }
+  };
+
+  const selectWallColor = (color: WallColor) => {
+    setWallColor(color);
+    // Clear wall texture when color is applied
+    setWallTexture(null);
+  };
+
+  const selectCustomWallColor = (hex: string) => {
+    const customColor: WallColor = {
+      id: `custom-${Date.now()}`,
+      name: 'Custom Color',
+      hex: hex,
+      isCustom: true
+    };
+    setWallColor(customColor);
+    // Clear wall texture when color is applied
+    setWallTexture(null);
   };
 
   const toggleSelection = (type: SelectionType) => {
@@ -172,6 +238,14 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
     return texture.type === selectionType || texture.type === 'both';
   };
 
+  const hasWallColor = (): boolean => {
+    return wallColor !== null && wallTexture === null;
+  };
+
+  const hasWallTexture = (): boolean => {
+    return wallTexture !== null && wallColor === null;
+  };
+
   const value: TextureContextType = {
     selectionType,
     setSelectionType,
@@ -179,11 +253,18 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
     floorTexture,
     setWallTexture,
     setFloorTexture,
+    wallColor,
+    setWallColor,
     getSelectedTexture,
+    getSelectedWallColor,
     selectTexture,
+    selectWallColor,
+    selectCustomWallColor,
     toggleSelection,
     getAvailableTextures,
-    canApplyTexture
+    canApplyTexture,
+    hasWallColor,
+    hasWallTexture
   };
 
   return (

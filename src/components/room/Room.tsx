@@ -1,8 +1,9 @@
-import React, { useRef } from 'react';
+import React, { Suspense, useRef } from 'react';
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Plane } from '@react-three/drei';
 import { TextureLoader, RepeatWrapping } from 'three';
 import { useTexture } from '@/context/TextureContext';
+import Loading from './Loading';
 
 const repetitionThreshold = 1 / 3;
 
@@ -26,14 +27,16 @@ const Wall = ({ height, width, position }: { height: number; width: number; posi
     }
 
     return (
-        <Plane
-            args={[width, height]}
-            position={position}
-        >
-            <meshStandardMaterial
-                map={texture}
-            />
-        </Plane>
+        <Suspense fallback={<Loading />}>
+            <Plane
+                args={[width, height]}
+                position={position}
+            >
+                <meshStandardMaterial
+                    map={texture}
+                />
+            </Plane>
+        </Suspense>
     );
 };
 
@@ -64,15 +67,17 @@ const Floor = ({ length, width }: { length: number; width: number }) => {
     }
 
     return (
-        <Plane
-            args={[length, width]}
-            rotation={[-Math.PI / 2.3, 0, 0]}
-            position={[0, 0, 0]}
-        >
-            <meshStandardMaterial
-                map={texture}
-            />
-        </Plane>
+        <Suspense fallback={<Loading />}>
+            <Plane
+                args={[length, width]}
+                rotation={[-Math.PI / 2.3, 0, 0]}
+                position={[0, 0, 0]}
+            >
+                <meshStandardMaterial
+                    map={texture}
+                />
+            </Plane>
+        </Suspense>
     );
 };
 
@@ -92,8 +97,9 @@ const CameraController = () => {
 const Scene = () => {
     return (
         <>
-            <ambientLight intensity={0.8} />
+            <ambientLight intensity={2.5} />
             <directionalLight position={[10, 10, 5]} intensity={0.5} />
+
             <Floor length={14} width={6} />
             <Wall
                 height={8}
@@ -116,7 +122,6 @@ export default function Room() {
             }}
             className="w-full h-full"
         >
-            {/* <CameraController/> */}
             <Scene />
         </Canvas>
     );
