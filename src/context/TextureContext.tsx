@@ -1,5 +1,5 @@
 'use client'
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 // Types
 export type TextureType = 'wall' | 'floor' | 'both';
@@ -128,6 +128,17 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [selectionType, setSelectionType] = useState<SelectionType>('floor'); // Default to floor
   const [wallTexture, setWallTexture] = useState<Texture | null>(null);
   const [floorTexture, setFloorTexture] = useState<Texture | null>(null);
+
+  // Set default textures on mount
+  useEffect(() => {
+    if (!floorTexture) {
+      // Set first texture as default floor texture
+      const defaultFloorTexture = textures.find(t => t.type === 'floor' || t.type === 'both');
+      if (defaultFloorTexture) {
+        setFloorTexture(defaultFloorTexture);
+      }
+    }
+  }, [floorTexture]);
 
   const getSelectedTexture = (): Texture | null => {
     if (selectionType === 'wall') return wallTexture;

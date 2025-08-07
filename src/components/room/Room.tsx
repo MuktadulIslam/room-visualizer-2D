@@ -1,50 +1,99 @@
 import React, { useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Plane } from '@react-three/drei';
+import { TextureLoader, RepeatWrapping } from 'three';
+import { useTexture } from '@/context/TextureContext';
+
+const repetitionThreshold = 1 / 3;
 
 // Wall Component
 const Wall = ({ height, width, position }: { height: number; width: number; position: [number, number, number] }) => {
+    const { wallTexture } = useTexture();
+
+    // Load texture if available
+    const texture = useLoader(TextureLoader, wallTexture?.texture_img || '/textures/floor/tiles1_glossy.webp');
+
+    // Configure texture mapping
+    if (texture && wallTexture) {
+        // Calculate repeat based on wall dimensions and texture size
+        const repeatX = (width * 100) / wallTexture.size[0] * repetitionThreshold; // Convert to cm and calculate repeats
+        const repeatY = (height * 100) / wallTexture.size[1] * repetitionThreshold;
+        console.log(repeatX, repeatY)
+
+        texture.wrapS = RepeatWrapping;
+        texture.wrapT = RepeatWrapping;
+        texture.repeat.set(repeatX, repeatY);
+    }
+
     return (
         <Plane
             args={[width, height]}
             position={position}
         >
-            <meshStandardMaterial color="#d0ff00" />
+            <meshStandardMaterial
+                map={texture}
+            />
         </Plane>
     );
 };
 
 // Floor Component
 const Floor = ({ length, width }: { length: number; width: number }) => {
+    const { floorTexture } = useTexture();
+
+    // Load texture if available, default to first texture
+    const texture = useLoader(TextureLoader, floorTexture?.texture_img || '/textures/floor/tiles1_glossy.webp');
+
+    // Configure texture mapping
+    if (texture && floorTexture) {
+        // Calculate repeat based on floor dimensions and texture size
+        const repeatX = (length * 100) / floorTexture.size[0] * repetitionThreshold; // Convert to cm and calculate repeats
+        const repeatY = (width * 100) / floorTexture.size[1] * repetitionThreshold;
+
+        texture.wrapS = RepeatWrapping;
+        texture.wrapT = RepeatWrapping;
+        texture.repeat.set(repeatX, repeatY);
+    } else if (texture) {
+        // Default texture configuration (assuming first texture size)
+        const repeatX = (length * 100) / 30; // Default 30cm tiles
+        const repeatY = (width * 100) / 30;
+
+        texture.wrapS = RepeatWrapping;
+        texture.wrapT = RepeatWrapping;
+        texture.repeat.set(repeatX, repeatY);
+    }
+
     return (
         <Plane
             args={[length, width]}
             rotation={[-Math.PI / 2.3, 0, 0]}
             position={[0, 0, 0]}
         >
-            <meshStandardMaterial color="#8B4513" />
+            <meshStandardMaterial
+                map={texture}
+            />
         </Plane>
     );
 };
 
 const CameraController = () => {
-  const controlsRef = useRef<any>(null);
-  
-  useFrame((state) => {
-    if (controlsRef.current) {
-    console.log(state.camera)
-    }
-  });
+    const controlsRef = useRef<any>(null);
 
-  return <OrbitControls ref={controlsRef} enablePan={true} enableDamping={false} dampingFactor={0} />;
+    useFrame((state) => {
+        if (controlsRef.current) {
+            console.log(state.camera)
+        }
+    });
+
+    return <OrbitControls ref={controlsRef} enablePan={true} enableDamping={false} dampingFactor={0} />;
 };
-
 
 // Main Scene Component
 const Scene = () => {
     return (
         <>
-            <ambientLight intensity={0.5} />
+            <ambientLight intensity={0.8} />
+            <directionalLight position={[10, 10, 5]} intensity={0.5} />
             <Floor length={14} width={6} />
             <Wall
                 height={8}
@@ -54,7 +103,6 @@ const Scene = () => {
         </>
     );
 };
-
 
 export default function Room() {
     return (
