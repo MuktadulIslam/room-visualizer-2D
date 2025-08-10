@@ -54,8 +54,10 @@ interface TextureContextType {
   setWallColor: (color: WallColor | null) => void;
   
   // Grout support - simplified to just one color
-  groutColor: string;
-  setGroutColor: (color: string) => void;
+  floorGroutColor: string;
+  setFloorGroutColor: (color: string) => void;
+  wallGroutColor: string;
+  setWallGroutColor: (color: string) => void;
   
   // Helper methods
   getSelectedTexture: () => Texture | null;
@@ -168,7 +170,8 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [wallColor, setWallColor] = useState<WallColor | null>(null);
   
   // Single grout color property
-  const [groutColor, setGroutColor] = useState<string>('#dbdbdb'); // Deep off-white default
+  const [floorGroutColor, setFloorGroutColor] = useState<string>('#dbdbdb'); // Deep off-white default
+  const [wallGroutColor, setWallGroutColor] = useState<string>('#dbdbdb'); // Deep off-white default
 
   // Set default colors/textures on mount
   useEffect(() => {
@@ -262,8 +265,10 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
     setFloorTexture,
     wallColor,
     setWallColor,
-    groutColor,
-    setGroutColor,
+    floorGroutColor,
+    setFloorGroutColor,
+    wallGroutColor,
+    setWallGroutColor,
     getSelectedTexture,
     getSelectedWallColor,
     selectTexture,

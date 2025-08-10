@@ -4,7 +4,7 @@ import { OrbitControls, Plane } from '@react-three/drei';
 import { TextureLoader, RepeatWrapping, CanvasTexture, Vector2 } from 'three';
 import { useTexture } from '@/context/TextureContext';
 
-const repetitionThreshold = 1 / 3;
+const repetitionThreshold = 2 / 5;
 
 // Function to create texture with grout lines
 const createTextureWithGrout = (
@@ -59,7 +59,7 @@ const createTextureWithGrout = (
 
 // Wall Component
 const Wall = ({ height, width, position }: { height: number; width: number; position: [number, number, number] }) => {
-    const { wallTexture, wallColor, groutColor } = useTexture();
+    const { wallTexture, wallColor, wallGroutColor } = useTexture();
 
     console.log('Wall - wallTexture:', wallTexture);
     
@@ -72,7 +72,7 @@ const Wall = ({ height, width, position }: { height: number; width: number; posi
         }
 
         // Create texture with grout lines
-        let texture = createTextureWithGrout(baseTexture, groutColor, wallTexture.size);
+        let texture = createTextureWithGrout(baseTexture, wallGroutColor, wallTexture.size);
 
         // Configure texture mapping
         if (texture && wallTexture.size) {
@@ -86,7 +86,7 @@ const Wall = ({ height, width, position }: { height: number; width: number; posi
         }
 
         return texture;
-    }, [baseTexture, wallTexture, groutColor, width, height]);
+    }, [baseTexture, wallTexture, wallGroutColor, width, height]);
 
     if (!wallTexture?.texture_img) {
         return (
@@ -105,9 +105,9 @@ const Wall = ({ height, width, position }: { height: number; width: number; posi
     );
 };
 
-// Floor Component
+// Floor Component - FIXED
 const Floor = ({ length, width }: { length: number; width: number }) => {
-    const { floorTexture, groutColor } = useTexture();
+    const { floorTexture, floorGroutColor } = useTexture();
 
     // Always call useLoader hook with a fallback texture
     const baseTexture = useLoader(TextureLoader, floorTexture?.texture_img || '/textures/floor/tiles1_glossy.webp');
@@ -116,13 +116,30 @@ const Floor = ({ length, width }: { length: number; width: number }) => {
         if (!floorTexture) return baseTexture;
 
         // Create texture with grout lines
-        let texture = createTextureWithGrout(baseTexture, groutColor, floorTexture.size);
+        let texture = createTextureWithGrout(baseTexture, floorGroutColor, floorTexture.size);
 
-        // Configure texture mapping
+        // Configure texture mapping - FIXED CALCULATION
         if (texture && floorTexture.size) {
-            // Calculate repeat based on floor dimensions and texture size
-            const repeatX = (length * 100) / floorTexture.size[0] * repetitionThreshold;
-            const repeatY = (width * 100) / floorTexture.size[1] * repetitionThreshold;
+            // Convert floor dimensions from Three.js units to centimeters
+            // Assuming 1 Three.js unit = 100cm for proper scaling
+            const floorLengthCm = length * 100;
+            const floorWidthCm = width * 100;
+            
+            // Calculate how many tiles fit along each axis
+            const tilesAlongLength = floorLengthCm / floorTexture.size[0];
+            const tilesAlongWidth = floorWidthCm / floorTexture.size[1];
+            
+            // Apply repetition threshold
+            const repeatX = tilesAlongLength * repetitionThreshold;
+            const repeatY = tilesAlongWidth * repetitionThreshold;
+
+            console.log('Floor texture details:', {
+                floorDimensions: { length, width },
+                floorDimensionsCm: { length: floorLengthCm, width: floorWidthCm },
+                tileSize: floorTexture.size,
+                tilesCount: { x: tilesAlongLength, y: tilesAlongWidth },
+                finalRepeats: { x: repeatX, y: repeatY }
+            });
 
             texture.wrapS = RepeatWrapping;
             texture.wrapT = RepeatWrapping;
@@ -130,12 +147,12 @@ const Floor = ({ length, width }: { length: number; width: number }) => {
         }
 
         return texture;
-    }, [baseTexture, floorTexture, groutColor, length, width]);
+    }, [baseTexture, floorTexture, floorGroutColor, length, width]);
 
     return (
         <Plane
             args={[length, width]}
-            rotation={[-Math.PI / 2.3, 0, 0]}
+            rotation={[-Math.PI / 2, 0, 0]} // FIXED: Use exact -90 degrees
             position={[0, 0, 0]}
         >
             <meshStandardMaterial map={finalTexture} />
