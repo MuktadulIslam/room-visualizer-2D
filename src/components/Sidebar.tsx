@@ -11,10 +11,13 @@ export default function Sidebar() {
         selectWallColor,
         selectCustomWallColor,
         getAvailableTextures,
-        hasWallColor 
+        hasWallColor,
+        groutColor,
+        setGroutColor
     } = useTexture();
 
     const [showColorPicker, setShowColorPicker] = useState(false);
+    const [showGroutColorPicker, setShowGroutColorPicker] = useState(false);
     const [customColor, setCustomColor] = useState('#ffffff');
 
     const selectedTexture = getSelectedTexture();
@@ -51,6 +54,55 @@ export default function Sidebar() {
             </div>
 
             <div className="space-y-3 overflow-y-auto p-2 h-full w-full pb-20">
+                {/* Grout Color Picker - Always visible */}
+                <div className="space-y-2 mb-4 p-3 bg-white border border-gray-300 rounded-lg">
+                    <h3 className="font-semibold text-gray-800 text-sm flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                        </svg>
+                        Tile Outline Color
+                    </h3>
+                    
+                    {!showGroutColorPicker ? (
+                        <button
+                            onClick={() => setShowGroutColorPicker(true)}
+                            className="w-full py-2 px-4 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all duration-200 flex items-center gap-3"
+                        >
+                            <div 
+                                className="w-6 h-6 rounded border border-gray-400"
+                                style={{ backgroundColor: groutColor }}
+                            ></div>
+                            <span>Change Outline Color</span>
+                        </button>
+                    ) : (
+                        <div className="bg-gray-50 border border-gray-300 rounded-lg p-3">
+                            <div className="flex items-center gap-2 mb-2">
+                                <input
+                                    type="color"
+                                    value={groutColor}
+                                    onChange={(e) => setGroutColor(e.target.value)}
+                                    className="w-12 h-8 rounded border border-gray-300 cursor-pointer"
+                                />
+                                <input
+                                    type="text"
+                                    value={groutColor}
+                                    onChange={(e) => setGroutColor(e.target.value)}
+                                    className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded"
+                                    placeholder="#f5f5f0"
+                                />
+                            </div>
+                            <div className="flex justify-end">
+                                <button
+                                    onClick={() => setShowGroutColorPicker(false)}
+                                    className="py-1 px-3 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400 transition-colors"
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
                 {/* Wall Color Selection (only show when wall is selected) */}
                 {selectionType === 'wall' && (
                     <div className="space-y-2 mb-6">

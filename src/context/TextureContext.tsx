@@ -53,15 +53,19 @@ interface TextureContextType {
   wallColor: WallColor | null;
   setWallColor: (color: WallColor | null) => void;
   
+  // Grout support - simplified to just one color
+  groutColor: string;
+  setGroutColor: (color: string) => void;
+  
   // Helper methods
   getSelectedTexture: () => Texture | null;
   getSelectedWallColor: () => WallColor | null;
   selectTexture: (texture: Texture) => void;
   selectWallColor: (color: WallColor) => void;
-  selectCustomWallColor: (hex: string) => void; // New method for custom colors
+  selectCustomWallColor: (hex: string) => void;
   toggleSelection: (type: SelectionType) => void;
-  getAvailableTextures: () => Texture[]; // Get textures available for current selection
-  canApplyTexture: (texture: Texture) => boolean; // Check if texture can be applied to current selection
+  getAvailableTextures: () => Texture[];
+  canApplyTexture: (texture: Texture) => boolean;
   
   // Check if wall has color or texture
   hasWallColor: () => boolean;
@@ -77,7 +81,7 @@ export const textures: Texture[] = [
     name: 'Tiles-1',
     size: [30, 30],
     is_glossy: true,
-    type: 'both' // Wood can be used for both walls and floors
+    type: 'both'
   },
   {
     id: '2',
@@ -86,7 +90,7 @@ export const textures: Texture[] = [
     name: 'Tiles-2',
     size: [30, 30],
     is_glossy: true,
-    type: 'both' // Marble can be used for both walls and floors
+    type: 'both'
   },
   {
     id: '3',
@@ -95,7 +99,7 @@ export const textures: Texture[] = [
     name: 'Tiles-3',
     size: [30, 30],
     is_glossy: true,
-    type: 'both' // Brick is typically used for walls only
+    type: 'both'
   },
   {
     id: '4',
@@ -104,7 +108,7 @@ export const textures: Texture[] = [
     name: 'Tiles-4',
     size: [30, 30],
     is_glossy: false,
-    type: 'both' // Tiles can be used for both walls and floors
+    type: 'both'
   },
   {
     id: '5',
@@ -113,7 +117,7 @@ export const textures: Texture[] = [
     name: 'Tiles-5',
     size: [30, 30],
     is_glossy: false,
-    type: 'both' // Concrete is typically used for floors only
+    type: 'both'
   },
   {
     id: '6',
@@ -122,16 +126,16 @@ export const textures: Texture[] = [
     name: 'Tiles-6',
     size: [30, 30],
     is_glossy: false,
-    type: 'both' // Granite can be used for both walls and floors
+    type: 'both'
   },
   {
     id: '7',
     texture_img: '/textures/floor/tiles7_matt.webp',
     show_img: '/textures/floor/tiles7_matt.webp',
     name: 'Tiles-7',
-    size: [30, 30], // Standard wallpaper roll width
+    size: [30, 30],
     is_glossy: false,
-    type: 'both' // Wallpaper is only for walls
+    type: 'both'
   },
   {
     id: '8',
@@ -140,16 +144,16 @@ export const textures: Texture[] = [
     name: 'Tiles-8',
     size: [60, 120],
     is_glossy: true,
-    type: 'floor' // Carpet is only for floors
+    type: 'floor'
   },
   {
     id: '9',
     texture_img: '/textures/floor/tiles9_glossy.webp',
     show_img: '/textures/floor/tiles9_glossy.webp',
     name: 'Hardwood Flooring',
-    size: [60, 120], // Standard hardwood plank size
+    size: [60, 120],
     is_glossy: true,
-    type: 'floor' // Hardwood flooring is primarily for floors
+    type: 'floor'
   },
 ];
 
@@ -158,10 +162,13 @@ const TextureContext = createContext<TextureContextType | undefined>(undefined);
 
 // Context Provider
 export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [selectionType, setSelectionType] = useState<SelectionType>('floor'); // Default to floor
+  const [selectionType, setSelectionType] = useState<SelectionType>('floor');
   const [wallTexture, setWallTexture] = useState<Texture | null>(null);
   const [floorTexture, setFloorTexture] = useState<Texture | null>(null);
   const [wallColor, setWallColor] = useState<WallColor | null>(null);
+  
+  // Single grout color property
+  const [groutColor, setGroutColor] = useState<string>('#dbdbdb'); // Deep off-white default
 
   // Set default colors/textures on mount
   useEffect(() => {
@@ -255,6 +262,8 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
     setFloorTexture,
     wallColor,
     setWallColor,
+    groutColor,
+    setGroutColor,
     getSelectedTexture,
     getSelectedWallColor,
     selectTexture,
