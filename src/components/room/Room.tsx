@@ -157,7 +157,7 @@ const Floor = ({ length, width }: { length: number; width: number }) => {
     return (
         <Plane
             args={[length, width]}
-            rotation={[-Math.PI / 2, 0, 0]} // FIXED: Use exact -90 degrees
+            rotation={[-Math.PI / 2.3, 0, 0]} // FIXED: Use exact -90 degrees
             position={[0, 0, 0]}
         >
             <meshStandardMaterial map={finalTexture} />
