@@ -1,4 +1,5 @@
 import { useTexture } from '@/context/TextureContext';
+import Image from 'next/image';
 
 export default function Furnitures() {
   const { selectionType, setSelectionType, wallTexture, floorTexture } = useTexture();
@@ -7,7 +8,9 @@ export default function Furnitures() {
 
   return (
     <div className="w-full h-full bg-transparent absolute top-0 left-0 z-40">
-      <img
+      <Image
+        width={3000}
+        height={2500}
         src={floorTexture?.is_glossy || wallTexture?.is_glossy ? "/furnitures/wall_glossy_floor_glossy.webp" : "/furnitures/wall_matt_floor_matt.webp"}
         alt="Room"
         className="w-full h-full bg-transparent"

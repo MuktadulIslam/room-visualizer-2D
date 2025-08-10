@@ -1,17 +1,16 @@
-import React, { Suspense, useRef, useMemo } from 'react';
-import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber';
-import { OrbitControls, Plane } from '@react-three/drei';
-import { TextureLoader, RepeatWrapping, CanvasTexture, Vector2 } from 'three';
+import React, { Suspense, useMemo } from 'react';
+import { Canvas, useLoader } from '@react-three/fiber';
+import { Plane } from '@react-three/drei';
+import { TextureLoader, RepeatWrapping, CanvasTexture } from 'three';
 import { useTexture } from '@/context/TextureContext';
 
 const repetitionThreshold = 2 / 5;
 
 // Function to create texture with grout lines
 const createTextureWithGrout = (
-    baseTexture: any, 
-    groutColor: string, 
-    tileSize: [number, number]
-) => {
+    baseTexture: { image: CanvasImageSource }, 
+    groutColor: string
+): CanvasTexture => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     
@@ -20,7 +19,13 @@ const createTextureWithGrout = (
     canvas.width = resolution;
     canvas.height = resolution;
     
-    if (!ctx) return baseTexture;
+    if (!ctx) {
+        // Return a basic texture if canvas context fails
+        const fallbackCanvas = document.createElement('canvas');
+        fallbackCanvas.width = resolution;
+        fallbackCanvas.height = resolution;
+        return new CanvasTexture(fallbackCanvas);
+    }
     
     // Calculate grout width (2mm equivalent)
     const groutWidth = 4; // pixels at this resolution
@@ -36,7 +41,7 @@ const createTextureWithGrout = (
     const tileHeight = resolution - groutWidth;
     
     // Draw base texture image if available
-    if (baseTexture && baseTexture.image) {
+    if (baseTexture && baseTexture.image instanceof HTMLImageElement) {
         ctx.drawImage(baseTexture.image, tileX, tileY, tileWidth, tileHeight);
     } else {
         // Fallback: draw a simple tile pattern
@@ -72,10 +77,10 @@ const Wall = ({ height, width, position }: { height: number; width: number; posi
         }
 
         // Create texture with grout lines
-        let texture = createTextureWithGrout(baseTexture, wallGroutColor, wallTexture.size);
+        const texture = createTextureWithGrout(baseTexture, wallGroutColor);
 
         // Configure texture mapping
-        if (texture && wallTexture.size) {
+        if (texture instanceof CanvasTexture && wallTexture.size) {
             const repeatX = (width * 100) / wallTexture.size[0] * repetitionThreshold;
             const repeatY = (height * 100) / wallTexture.size[1] * repetitionThreshold;
             console.log('Wall texture repeats:', repeatX, repeatY);
@@ -116,10 +121,10 @@ const Floor = ({ length, width }: { length: number; width: number }) => {
         if (!floorTexture) return baseTexture;
 
         // Create texture with grout lines
-        let texture = createTextureWithGrout(baseTexture, floorGroutColor, floorTexture.size);
+        const texture = createTextureWithGrout(baseTexture, floorGroutColor);
 
         // Configure texture mapping - FIXED CALCULATION
-        if (texture && floorTexture.size) {
+        if (texture instanceof CanvasTexture && floorTexture.size) {
             // Convert floor dimensions from Three.js units to centimeters
             // Assuming 1 Three.js unit = 100cm for proper scaling
             const floorLengthCm = length * 100;

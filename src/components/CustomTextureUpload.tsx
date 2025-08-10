@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import Image from 'next/image';
 
 interface Texture {
   id: string;
@@ -62,7 +63,7 @@ export default function CustomTextureUpload({ onClose, onUpload }: CustomTexture
       return;
     }
 
-    if (textureWidth <= 0 || textureHeight <= 0 || textureWidth === '' || textureHeight === '') {
+    if (typeof textureWidth !== 'number' || typeof textureHeight !== 'number' || textureWidth <= 0 || textureHeight <= 0) {
       alert('Please enter valid dimensions (greater than 0)');
       return;
     }
@@ -161,11 +162,12 @@ export default function CustomTextureUpload({ onClose, onUpload }: CustomTexture
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Preview
               </label>
-              <div className="w-full h-32 bg-gray-100 rounded-lg overflow-hidden border border-gray-300">
-                <img
+              <div className="w-full h-32 bg-gray-100 rounded-lg overflow-hidden border border-gray-300 relative">
+                <Image
                   src={previewUrl}
                   alt="Texture preview"
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
                 />
               </div>
             </div>

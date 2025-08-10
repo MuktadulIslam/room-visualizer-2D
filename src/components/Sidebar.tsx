@@ -1,6 +1,7 @@
 import { useTexture, wallColors, Texture } from '@/context/TextureContext';
 import { useState } from 'react';
 import CustomTextureUpload from './CustomTextureUpload';
+import Image from 'next/image';
 
 export default function Sidebar() {
     const {
@@ -136,8 +137,8 @@ export default function Sidebar() {
                                     key={color.id}
                                     onClick={() => selectWallColor(color)}
                                     className={`relative aspect-square rounded-lg cursor-pointer border-2 transition-all duration-200 hover:scale-105 ${selectedWallColor?.id === color.id
-                                            ? 'border-blue-500 shadow-md'
-                                            : 'border-gray-300 hover:border-blue-300'
+                                        ? 'border-blue-500 shadow-md'
+                                        : 'border-gray-300 hover:border-blue-300'
                                         }`}
                                     style={{ backgroundColor: color.hex }}
                                     title={color.name}
@@ -255,7 +256,9 @@ export default function Sidebar() {
                         <div className="w-full h-auto flex gap-2">
                             {/* Texture Preview Image */}
                             <div className="h-28 aspect-square bg-gray-200 overflow-hidden">
-                                <img
+                                <Image
+                                    width={100}
+                                    height={100}
                                     src={texture.show_img}
                                     alt={texture.name}
                                     className="w-full h-full object-cover"
