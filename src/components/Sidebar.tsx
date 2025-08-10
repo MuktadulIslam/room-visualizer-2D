@@ -1,5 +1,6 @@
-import { useTexture, wallColors } from '@/context/TextureContext';
+import { useTexture, wallColors, Texture } from '@/context/TextureContext';
 import { useState } from 'react';
+import CustomTextureUpload from './CustomTextureUpload';
 
 export default function Sidebar() {
     const {
@@ -16,11 +17,14 @@ export default function Sidebar() {
         floorGroutColor,
         setFloorGroutColor,
         wallGroutColor,
-        setWallGroutColor
+        setWallGroutColor,
+        addCustomTexture,
+        removeCustomTexture
     } = useTexture();
 
     const [showColorPicker, setShowColorPicker] = useState(false);
     const [showGroutColorPicker, setShowGroutColorPicker] = useState(false);
+    const [showCustomTextureUpload, setShowCustomTextureUpload] = useState(false);
     const [customColor, setCustomColor] = useState('#ffffff');
 
     const selectedTexture = getSelectedTexture();
@@ -30,6 +34,19 @@ export default function Sidebar() {
     const handleCustomColorChange = (newColor: string) => {
         setCustomColor(newColor);
         selectCustomWallColor(newColor);
+    };
+
+    const handleCustomTextureUpload = (texture: Texture) => {
+        addCustomTexture(texture);
+        // Automatically select the newly uploaded texture
+        selectTexture(texture);
+    };
+
+    const handleDeleteCustomTexture = (textureId: string, e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent texture selection when clicking delete
+        if (confirm('Are you sure you want to delete this custom texture?')) {
+            removeCustomTexture(textureId);
+        }
     };
 
     return (
@@ -199,16 +216,42 @@ export default function Sidebar() {
                     </div>
                 )}
 
+                {/* Custom Texture Upload Button */}
+                <div className="mb-4">
+                    <button
+                        onClick={() => setShowCustomTextureUpload(true)}
+                        className="w-full py-2 px-4 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all duration-200 flex items-center justify-center gap-2 font-semibold"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        Upload Custom Texture
+                    </button>
+                </div>
+
                 {/* Texture Selection */}
                 {availableTextures.map((texture) => (
                     <div
                         key={texture.id}
                         onClick={() => selectTexture(texture)}
-                        className={`border rounded-lg p-2 cursor-pointer transition-all duration-200 hover:shadow-md hover:border-blue-300 ${selectedTexture?.id === texture.id
+                        className={`border rounded-lg p-2 cursor-pointer transition-all duration-200 hover:shadow-md hover:border-blue-300 relative ${selectedTexture?.id === texture.id
                             ? 'border-blue-500 bg-blue-50 shadow-md'
                             : 'border-gray-300 bg-white'
                             }`}
                     >
+                        {/* Delete button for custom textures */}
+                        {texture.isCustom && (
+                            <button
+                                onClick={(e) => handleDeleteCustomTexture(texture.id, e)}
+                                className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors z-10"
+                                title="Delete custom texture"
+                            >
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        )}
+
                         <div className="w-full h-auto flex gap-2">
                             {/* Texture Preview Image */}
                             <div className="h-28 aspect-square bg-gray-200 overflow-hidden">
@@ -225,8 +268,13 @@ export default function Sidebar() {
                             </div>
 
                             {/* Texture Info */}
-                            <div className="space-y-1">
-                                <h3 className="font-semibold text-gray-800 text-base">{texture.name}</h3>
+                            <div className="space-y-1 flex-1">
+                                <div className="flex items-start justify-between">
+                                    <h3 className="font-semibold text-gray-800 text-base pr-8">{texture.name}</h3>
+                                    {texture.isCustom && (
+                                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Custom</span>
+                                    )}
+                                </div>
                                 <p className='text-sm '>Size: {texture.size[0]}×{texture.size[1]}cm</p>
                                 <div className={`px-3 h-5 font-semibold rounded-full text-xs border text-black inline-block items-center ${texture.is_glossy
                                     ? 'bg-yellow-100 border-yellow-800'
@@ -250,12 +298,21 @@ export default function Sidebar() {
                 ))}
 
                 {/* No textures available message */}
-                {availableTextures.length === 0 && selectionType === 'floor' && (
+                {availableTextures.length === 0 && (
                     <div className="text-center text-gray-500 py-8">
                         <p>No textures available for {selectionType}</p>
+                        <p className="text-sm mt-2">Upload a custom texture to get started!</p>
                     </div>
                 )}
             </div>
+
+            {/* Custom Texture Upload Modal */}
+            {showCustomTextureUpload && (
+                <CustomTextureUpload
+                    onClose={() => setShowCustomTextureUpload(false)}
+                    onUpload={handleCustomTextureUpload}
+                />
+            )}
         </div>
     );
 }

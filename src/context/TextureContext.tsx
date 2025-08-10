@@ -12,6 +12,7 @@ export interface Texture {
   size: [number, number]; // [width, height] in cm
   is_glossy: boolean;
   type: TextureType; // Specifies if texture can be used for wall, floor, or both
+  isCustom?: boolean; // Flag for custom uploaded textures
 }
 
 export type SelectionType = 'wall' | 'floor' | null;
@@ -49,6 +50,11 @@ interface TextureContextType {
   setWallTexture: (texture: Texture | null) => void;
   setFloorTexture: (texture: Texture | null) => void;
   
+  // Custom textures
+  customTextures: Texture[];
+  addCustomTexture: (texture: Texture) => void;
+  removeCustomTexture: (textureId: string) => void;
+  
   // Wall color support
   wallColor: WallColor | null;
   setWallColor: (color: WallColor | null) => void;
@@ -75,7 +81,7 @@ interface TextureContextType {
 }
 
 // Sample texture data
-export const textures: Texture[] = [
+export const defaultTextures: Texture[] = [
   {
     id: '1',
     texture_img: '/textures/floor/tiles1_glossy.webp',
@@ -168,12 +174,14 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [wallTexture, setWallTexture] = useState<Texture | null>(null);
   const [floorTexture, setFloorTexture] = useState<Texture | null>(null);
   const [wallColor, setWallColor] = useState<WallColor | null>(null);
+  const [customTextures, setCustomTextures] = useState<Texture[]>([]);
   
   // Single grout color property
   const [floorGroutColor, setFloorGroutColor] = useState<string>('#dbdbdb'); // Deep off-white default
   const [wallGroutColor, setWallGroutColor] = useState<string>('#dbdbdb'); // Deep off-white default
 
-  // Set default colors/textures on mount
+  // Note: Custom textures are stored in memory during the session
+  // In a real application, you would persist these to a database or localStorage
   useEffect(() => {
     // Set default off-white color for walls (no default texture)
     if (!wallColor && !wallTexture) {
@@ -185,12 +193,29 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     // Set default texture for floor
     if (!floorTexture) {
-      const defaultFloorTexture = textures.find(t => t.type === 'floor' || t.type === 'both');
+      const allTextures = [...defaultTextures, ...customTextures];
+      const defaultFloorTexture = allTextures.find(t => t.type === 'floor' || t.type === 'both');
       if (defaultFloorTexture) {
         setFloorTexture(defaultFloorTexture);
       }
     }
-  }, [wallColor, wallTexture, floorTexture]);
+  }, [wallColor, wallTexture, floorTexture, customTextures]);
+
+  const addCustomTexture = (texture: Texture) => {
+    setCustomTextures(prev => [...prev, texture]);
+  };
+
+  const removeCustomTexture = (textureId: string) => {
+    setCustomTextures(prev => prev.filter(t => t.id !== textureId));
+    
+    // Clear selected textures if they were the deleted custom texture
+    if (wallTexture?.id === textureId) {
+      setWallTexture(null);
+    }
+    if (floorTexture?.id === textureId) {
+      setFloorTexture(null);
+    }
+  };
 
   const getSelectedTexture = (): Texture | null => {
     if (selectionType === 'wall') return wallTexture;
@@ -238,7 +263,8 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const getAvailableTextures = (): Texture[] => {
     if (!selectionType) return [];
-    return textures.filter(texture => 
+    const allTextures = [...defaultTextures, ...customTextures];
+    return allTextures.filter(texture => 
       texture.type === selectionType || texture.type === 'both'
     );
   };
@@ -263,6 +289,9 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
     floorTexture,
     setWallTexture,
     setFloorTexture,
+    customTextures,
+    addCustomTexture,
+    removeCustomTexture,
     wallColor,
     setWallColor,
     floorGroutColor,
