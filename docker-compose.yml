@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  room-visualizer-prod:
+    build:
+      context: .
+      target: runner
+    container_name: room-visualizer-prod
+    ports:
+      - "3033:3000"
+    environment:
+      - NODE_ENV=production
+    restart: always
