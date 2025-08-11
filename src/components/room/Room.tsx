@@ -9,7 +9,8 @@ const repetitionThreshold = 2 / 5;
 // Function to create texture with grout lines
 const createTextureWithGrout = (
     baseTexture: { image: CanvasImageSource }, 
-    groutColor: string
+    groutColor: string,
+    showGrout: boolean
 ): CanvasTexture => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -27,31 +28,47 @@ const createTextureWithGrout = (
         return new CanvasTexture(fallbackCanvas);
     }
     
-    // Calculate grout width (2mm equivalent)
-    const groutWidth = 4; // pixels at this resolution
-    
-    // Fill with grout color
-    ctx.fillStyle = groutColor;
-    ctx.fillRect(0, 0, resolution, resolution);
-    
-    // Create tile area (subtract grout from edges)
-    const tileX = groutWidth / 2;
-    const tileY = groutWidth / 2;
-    const tileWidth = resolution - groutWidth;
-    const tileHeight = resolution - groutWidth;
-    
-    // Draw base texture image if available
-    if (baseTexture && baseTexture.image instanceof HTMLImageElement) {
-        ctx.drawImage(baseTexture.image, tileX, tileY, tileWidth, tileHeight);
+    // If grout is disabled, just draw the base texture without grout lines
+    if (!showGrout) {
+        if (baseTexture && baseTexture.image instanceof HTMLImageElement) {
+            ctx.drawImage(baseTexture.image, 0, 0, resolution, resolution);
+        } else {
+            // Fallback: draw a simple texture pattern
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, resolution, resolution);
+            
+            // Add some texture variation
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(resolution * 0.1, resolution * 0.1, 
+                        resolution * 0.8, resolution * 0.8);
+        }
     } else {
-        // Fallback: draw a simple tile pattern
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(tileX, tileY, tileWidth, tileHeight);
+        // Calculate grout width (2mm equivalent)
+        const groutWidth = 4; // pixels at this resolution
         
-        // Add some texture variation
-        ctx.fillStyle = '#f0f0f0';
-        ctx.fillRect(tileX + tileWidth * 0.1, tileY + tileHeight * 0.1, 
-                    tileWidth * 0.8, tileHeight * 0.8);
+        // Fill with grout color
+        ctx.fillStyle = groutColor;
+        ctx.fillRect(0, 0, resolution, resolution);
+        
+        // Create tile area (subtract grout from edges)
+        const tileX = groutWidth / 2;
+        const tileY = groutWidth / 2;
+        const tileWidth = resolution - groutWidth;
+        const tileHeight = resolution - groutWidth;
+        
+        // Draw base texture image if available
+        if (baseTexture && baseTexture.image instanceof HTMLImageElement) {
+            ctx.drawImage(baseTexture.image, tileX, tileY, tileWidth, tileHeight);
+        } else {
+            // Fallback: draw a simple tile pattern
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(tileX, tileY, tileWidth, tileHeight);
+            
+            // Add some texture variation
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(tileX + tileWidth * 0.1, tileY + tileHeight * 0.1, 
+                        tileWidth * 0.8, tileHeight * 0.8);
+        }
     }
     
     // Create and return the new texture
@@ -64,7 +81,7 @@ const createTextureWithGrout = (
 
 // Wall Component
 const Wall = ({ height, width, position }: { height: number; width: number; position: [number, number, number] }) => {
-    const { wallTexture, wallColor, wallGroutColor } = useTexture();
+    const { wallTexture, wallColor, wallGroutColor, showWallGrout } = useTexture();
 
     console.log('Wall - wallTexture:', wallTexture);
     
@@ -76,11 +93,18 @@ const Wall = ({ height, width, position }: { height: number; width: number; posi
             return null;
         }
 
-        // Create texture with grout lines
-        const texture = createTextureWithGrout(baseTexture, wallGroutColor);
+        let texture;
+        
+        if (showWallGrout) {
+            // Create texture with grout lines
+            texture = createTextureWithGrout(baseTexture, wallGroutColor, true);
+        } else {
+            // Use original texture directly without any processing
+            texture = baseTexture.clone();
+        }
 
         // Configure texture mapping
-        if (texture instanceof CanvasTexture && wallTexture.size) {
+        if (wallTexture.size) {
             const repeatX = (width * 100) / wallTexture.size[0] * repetitionThreshold;
             const repeatY = (height * 100) / wallTexture.size[1] * repetitionThreshold;
             console.log('Wall texture repeats:', repeatX, repeatY);
@@ -91,7 +115,7 @@ const Wall = ({ height, width, position }: { height: number; width: number; posi
         }
 
         return texture;
-    }, [baseTexture, wallTexture, wallGroutColor, width, height]);
+    }, [baseTexture, wallTexture, wallGroutColor, showWallGrout, width, height]);
 
     if (!wallTexture?.texture_img) {
         return (
@@ -112,7 +136,7 @@ const Wall = ({ height, width, position }: { height: number; width: number; posi
 
 // Floor Component - FIXED
 const Floor = ({ length, width }: { length: number; width: number }) => {
-    const { floorTexture, floorGroutColor } = useTexture();
+    const { floorTexture, floorGroutColor, showFloorGrout } = useTexture();
 
     // Always call useLoader hook with a fallback texture
     const baseTexture = useLoader(TextureLoader, floorTexture?.texture_img || '/textures/floor/tiles1_glossy.webp');
@@ -120,11 +144,18 @@ const Floor = ({ length, width }: { length: number; width: number }) => {
     const finalTexture = useMemo(() => {
         if (!floorTexture) return baseTexture;
 
-        // Create texture with grout lines
-        const texture = createTextureWithGrout(baseTexture, floorGroutColor);
+        let texture;
+        
+        if (showFloorGrout) {
+            // Create texture with grout lines
+            texture = createTextureWithGrout(baseTexture, floorGroutColor, true);
+        } else {
+            // Use original texture directly without any processing
+            texture = baseTexture.clone();
+        }
 
         // Configure texture mapping - FIXED CALCULATION
-        if (texture instanceof CanvasTexture && floorTexture.size) {
+        if (floorTexture.size) {
             // Convert floor dimensions from Three.js units to centimeters
             // Assuming 1 Three.js unit = 100cm for proper scaling
             const floorLengthCm = length * 100;
@@ -143,7 +174,8 @@ const Floor = ({ length, width }: { length: number; width: number }) => {
                 floorDimensionsCm: { length: floorLengthCm, width: floorWidthCm },
                 tileSize: floorTexture.size,
                 tilesCount: { x: tilesAlongLength, y: tilesAlongWidth },
-                finalRepeats: { x: repeatX, y: repeatY }
+                finalRepeats: { x: repeatX, y: repeatY },
+                groutVisible: showFloorGrout
             });
 
             texture.wrapS = RepeatWrapping;
@@ -152,7 +184,7 @@ const Floor = ({ length, width }: { length: number; width: number }) => {
         }
 
         return texture;
-    }, [baseTexture, floorTexture, floorGroutColor, length, width]);
+    }, [baseTexture, floorTexture, floorGroutColor, showFloorGrout, length, width]);
 
     return (
         <Plane

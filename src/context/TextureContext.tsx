@@ -65,6 +65,12 @@ interface TextureContextType {
   wallGroutColor: string;
   setWallGroutColor: (color: string) => void;
   
+  // Grout visibility toggle - separate for wall and floor
+  showWallGrout: boolean;
+  setShowWallGrout: (show: boolean) => void;
+  showFloorGrout: boolean;
+  setShowFloorGrout: (show: boolean) => void;
+  
   // Helper methods
   getSelectedTexture: () => Texture | null;
   getSelectedWallColor: () => WallColor | null;
@@ -179,6 +185,10 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
   // Single grout color property
   const [floorGroutColor, setFloorGroutColor] = useState<string>('#dbdbdb'); // Deep off-white default
   const [wallGroutColor, setWallGroutColor] = useState<string>('#dbdbdb'); // Deep off-white default
+  
+  // Grout visibility toggle - separate for wall and floor
+  const [showWallGrout, setShowWallGrout] = useState<boolean>(true);
+  const [showFloorGrout, setShowFloorGrout] = useState<boolean>(true);
 
   // Note: Custom textures are stored in memory during the session
   // In a real application, you would persist these to a database or localStorage
@@ -298,6 +308,10 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
     setFloorGroutColor,
     wallGroutColor,
     setWallGroutColor,
+    showWallGrout,
+    setShowWallGrout,
+    showFloorGrout,
+    setShowFloorGrout,
     getSelectedTexture,
     getSelectedWallColor,
     selectTexture,
