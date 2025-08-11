@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import Image from 'next/image';
+import { TextureType } from '@/context/TextureContext';
 
 interface Texture {
   id: string;
@@ -8,7 +9,7 @@ interface Texture {
   name: string;
   size: [number, number];
   is_glossy: boolean;
-  type: 'wall' | 'floor' | 'both';
+  type: TextureType;
   isCustom?: boolean;
 }
 
@@ -24,7 +25,7 @@ export default function CustomTextureUpload({ onClose, onUpload }: CustomTexture
   const [textureWidth, setTextureWidth] = useState<number | string>(30);
   const [textureHeight, setTextureHeight] = useState<number | string>(25);
   const [isGlossy, setIsGlossy] = useState(false);
-  const [textureType, setTextureType] = useState<'wall' | 'floor' | 'both'>('both');
+  const [textureType, setTextureType] = useState<TextureType>('both');
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -44,11 +45,11 @@ export default function CustomTextureUpload({ onClose, onUpload }: CustomTexture
       }
 
       setSelectedFile(file);
-      
+
       // Create preview URL
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
-      
+
       // Set default name from filename
       if (!textureName) {
         const nameWithoutExtension = file.name.split('.').slice(0, -1).join('.');
@@ -75,7 +76,7 @@ export default function CustomTextureUpload({ onClose, onUpload }: CustomTexture
       const reader = new FileReader();
       reader.onload = (e) => {
         const dataUrl = e.target?.result as string;
-        
+
         // Create the custom texture object
         const customTexture = {
           id: `custom-${Date.now()}`,
@@ -90,7 +91,7 @@ export default function CustomTextureUpload({ onClose, onUpload }: CustomTexture
 
         // Call the upload callback
         onUpload(customTexture);
-        
+
         // Clean up
         URL.revokeObjectURL(previewUrl);
         setIsUploading(false);
@@ -193,7 +194,7 @@ export default function CustomTextureUpload({ onClose, onUpload }: CustomTexture
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Width (cm)
               </label>
-                              <input
+              <input
                 type="number"
                 value={textureWidth}
                 onChange={(e) => {
@@ -222,7 +223,7 @@ export default function CustomTextureUpload({ onClose, onUpload }: CustomTexture
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Height (cm)
               </label>
-                              <input
+              <input
                 type="number"
                 value={textureHeight}
                 onChange={(e) => {

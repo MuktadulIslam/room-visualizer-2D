@@ -1,6 +1,6 @@
 'use client'
 import Furnitures from '@/components/Furnitures';
-import Room from '@/components/room/Room';
+import Room from '@/components/Room';
 import Sidebar from '@/components/Sidebar';
 import { TextureProvider } from '@/context/TextureContext';
 
