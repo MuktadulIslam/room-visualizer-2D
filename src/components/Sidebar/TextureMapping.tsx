@@ -1,4 +1,4 @@
-import { useTexture } from '@/context/TextureContext';
+import { useTexture, Texture } from '@/context/TextureContext';
 import Image from 'next/image';
 import { useState } from 'react';
 
@@ -18,7 +18,7 @@ export default function TextureMapping() {
         }
     };
 
-    const handleDoubleClick = (texture: any, e: React.MouseEvent) => {
+    const handleDoubleClick = (texture: Texture, e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
         setEditingTexture(texture.id);
@@ -45,13 +45,15 @@ export default function TextureMapping() {
         setEditWidth('');
         setEditHeight('');
     };
-    
+
     const handleResetSize = (textureId: string, e: React.MouseEvent) => {
         e.stopPropagation();
-        setEditingTexture(null);
         if (confirm('Reset this texture size to original dimensions?')) {
             resetTextureSize(textureId);
         }
+        setEditingTexture(null);
+        setEditWidth('');
+        setEditHeight('');
     };
 
     const handleResetAllSizes = () => {
@@ -97,7 +99,6 @@ export default function TextureMapping() {
                     </button>
                 )}
 
-
                 <div className="w-full h-auto flex gap-2">
                     {/* Texture Preview Image */}
                     <div className="h-28 aspect-square bg-gray-200 overflow-hidden">
@@ -123,7 +124,7 @@ export default function TextureMapping() {
                                 <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Custom</span>
                             )}
                         </div>
-                        
+
                         {/* Editable Size Section */}
                         {editingTexture === texture.id ? (
                             <div className="space-y-2">
