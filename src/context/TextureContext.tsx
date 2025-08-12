@@ -55,6 +55,9 @@ interface TextureContextType {
   customTextures: Texture[];
   addCustomTexture: (texture: Texture) => void;
   removeCustomTexture: (textureId: string) => void;
+  updateTextureSize: (textureId: string, newSize: [number, number]) => void;
+  resetTextureSize: (textureId: string) => void;
+  resetAllTextureSizes: () => void;
   
   // Wall color support
   wallColor: WallColor | null;
@@ -98,6 +101,8 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [floorTexture, setFloorTexture] = useState<Texture | null>(null);
   const [wallColor, setWallColor] = useState<WallColor | null>(null);
   const [customTextures, setCustomTextures] = useState<Texture[]>([]);
+  // Make defaultTextures mutable so we can update their sizes
+  const [mutableDefaultTextures, setMutableDefaultTextures] = useState<Texture[]>(defaultTextures);
   
   // Single grout color property
   const [floorGroutColor, setFloorGroutColor] = useState<string>('#dbdbdb'); // Deep off-white default
@@ -120,13 +125,13 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     // Set default texture for floor
     if (!floorTexture) {
-      const allTextures = [...defaultTextures, ...customTextures];
+      const allTextures = [...mutableDefaultTextures, ...customTextures];
       const defaultFloorTexture = allTextures.find(t => t.type === 'floor' || t.type === 'both');
       if (defaultFloorTexture) {
         setFloorTexture(defaultFloorTexture);
       }
     }
-  }, [wallColor, wallTexture, floorTexture, customTextures]);
+  }, [wallColor, wallTexture, floorTexture, customTextures, mutableDefaultTextures]);
 
   const addCustomTexture = (texture: Texture) => {
     setCustomTextures(prev => [...prev, texture]);
@@ -141,6 +146,57 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
     if (floorTexture?.id === textureId) {
       setFloorTexture(null);
+    }
+  };
+
+  const updateTextureSize = (textureId: string, newSize: [number, number]) => {
+    // Update default textures if the texture being edited is a default one
+    setMutableDefaultTextures(prev => prev.map(texture => 
+      texture.id === textureId 
+        ? { ...texture, size: newSize }
+        : texture
+    ));
+
+    // Update custom textures
+    setCustomTextures(prev => prev.map(texture => 
+      texture.id === textureId 
+        ? { ...texture, size: newSize }
+        : texture
+    ));
+
+    // Update currently selected textures if they match
+    if (wallTexture?.id === textureId) {
+      setWallTexture({ ...wallTexture, size: newSize });
+    }
+    if (floorTexture?.id === textureId) {
+      setFloorTexture({ ...floorTexture, size: newSize });
+    }
+  };
+
+  const resetTextureSize = (textureId: string) => {
+    // Find the original texture from defaultTextures
+    const originalTexture = defaultTextures.find(t => t.id === textureId);
+    if (originalTexture) {
+      updateTextureSize(textureId, originalTexture.size);
+    }
+  };
+
+  const resetAllTextureSizes = () => {
+    // Reset all default textures to their original sizes
+    setMutableDefaultTextures([...defaultTextures]);
+    
+    // Update currently selected textures if they are default textures
+    if (wallTexture && !wallTexture.isCustom) {
+      const originalTexture = defaultTextures.find(t => t.id === wallTexture.id);
+      if (originalTexture) {
+        setWallTexture({ ...wallTexture, size: originalTexture.size });
+      }
+    }
+    if (floorTexture && !floorTexture.isCustom) {
+      const originalTexture = defaultTextures.find(t => t.id === floorTexture.id);
+      if (originalTexture) {
+        setFloorTexture({ ...floorTexture, size: originalTexture.size });
+      }
     }
   };
 
@@ -190,7 +246,7 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const getAvailableTextures = (): Texture[] => {
     if (!selectionType) return [];
-    const allTextures = [...defaultTextures, ...customTextures];
+    const allTextures = [...mutableDefaultTextures, ...customTextures];
     return allTextures.filter(texture => 
       texture.type === selectionType || texture.type === 'both'
     );
@@ -219,6 +275,9 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
     customTextures,
     addCustomTexture,
     removeCustomTexture,
+    updateTextureSize,
+    resetTextureSize,
+    resetAllTextureSizes,
     wallColor,
     setWallColor,
     floorGroutColor,
