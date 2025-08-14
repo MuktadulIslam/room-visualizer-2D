@@ -42,8 +42,8 @@ export default function Floor ({ length, width }: FloorProps) {
             const tilesAlongWidth = floorWidthCm / floorTexture.size[1];
             
             // Apply repetition threshold
-            const repeatX = tilesAlongLength * repetitionThreshold;
-            const repeatY = tilesAlongWidth * repetitionThreshold;
+            const repeatX = tilesAlongLength * repetitionThreshold*1.2;
+            const repeatY = tilesAlongWidth * repetitionThreshold*1.5;
 
             console.log('Floor texture details:', {
                 floorDimensions: { length, width },

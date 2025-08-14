@@ -183,10 +183,10 @@ export default function TextureMapping() {
                                 </div>
                                 <div className="flex gap-1">
                                     <button
-                                        onClick={() => handleSizeUpdate(texture.id)}
-                                        className="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors"
+                                        onClick={(e) => handleResetSize(texture.id, e)}
+                                        className="px-2 py-1 bg-blue-400 text-white text-xs rounded hover:bg-blue-500 transition-colors"
                                     >
-                                        Save
+                                        Reset
                                     </button>
                                     <button
                                         onClick={handleCancelEdit}
@@ -195,10 +195,10 @@ export default function TextureMapping() {
                                         Cancel
                                     </button>
                                     <button
-                                        onClick={(e) => handleResetSize(texture.id, e)}
-                                        className="px-2 py-1 bg-blue-400 text-white text-xs rounded hover:bg-blue-500 transition-colors"
+                                        onClick={() => handleSizeUpdate(texture.id)}
+                                        className="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors"
                                     >
-                                        Reset
+                                        Save
                                     </button>
                                 </div>
                             </div>
