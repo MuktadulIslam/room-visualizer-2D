@@ -180,7 +180,7 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch('http://202.4.127.187:6880/remove-floor-base64', {
+      const response = await fetch('https://roomvisualizer.streamstech.com/api/remove-floor-base64', {
         method: 'POST',
         body: formData,
       });
