@@ -7,7 +7,7 @@ export default function Scene() {
         <>
             <ambientLight intensity={2} />
             <Suspense>
-                <Floor length={14} width={6} />
+                <Floor length={25} width={6} />
             </Suspense>
             <Suspense>
                 <Wall

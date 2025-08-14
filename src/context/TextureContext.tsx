@@ -26,6 +26,21 @@ export interface WallColor {
   isCustom?: boolean; // Flag for custom colors
 }
 
+// Room image interface
+export interface RoomImage {
+  originalImage: string;
+  processedImage: string | null;
+  isProcessing: boolean;
+  error: string | null;
+}
+
+// API Response interfaces
+interface ApiResponse {
+  success: boolean;
+  result_base64: string;
+  message: string;
+}
+
 // Predefined wall colors
 export const wallColors: WallColor[] = [
   { id: 'offwhite', name: 'Off White', hex: '#f8f8ff' },
@@ -75,6 +90,12 @@ interface TextureContextType {
   showFloorGrout: boolean;
   setShowFloorGrout: (show: boolean) => void;
   
+  // Room image upload functionality
+  roomImage: RoomImage | null;
+  setRoomImage: (roomImage: RoomImage | null) => void;
+  uploadRoomImage: (file: File) => Promise<void>;
+  clearRoomImage: () => void;
+  
   // Helper methods
   getSelectedTexture: () => Texture | null;
   getSelectedWallColor: () => WallColor | null;
@@ -90,7 +111,6 @@ interface TextureContextType {
   hasWallTexture: () => boolean;
 }
 
-
 // Create Context
 const TextureContext = createContext<TextureContextType | undefined>(undefined);
 
@@ -101,6 +121,8 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [floorTexture, setFloorTexture] = useState<Texture | null>(null);
   const [wallColor, setWallColor] = useState<WallColor | null>(null);
   const [customTextures, setCustomTextures] = useState<Texture[]>([]);
+  const [roomImage, setRoomImage] = useState<RoomImage | null>(null);
+  
   // Make defaultTextures mutable so we can update their sizes
   const [mutableDefaultTextures, setMutableDefaultTextures] = useState<Texture[]>(defaultTextures);
   
@@ -112,8 +134,7 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [showWallGrout, setShowWallGrout] = useState<boolean>(true);
   const [showFloorGrout, setShowFloorGrout] = useState<boolean>(true);
 
-  // Note: Custom textures are stored in memory during the session
-  // In a real application, you would persist these to a database or localStorage
+  // Set default values on mount
   useEffect(() => {
     // Set default off-white color for walls (no default texture)
     if (!wallColor && !wallTexture) {
@@ -132,6 +153,75 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
       }
     }
   }, [wallColor, wallTexture, floorTexture, customTextures, mutableDefaultTextures]);
+
+  // Room image upload function
+  const uploadRoomImage = async (file: File): Promise<void> => {
+    // Validate file
+    if (!file.type.startsWith('image/')) {
+      throw new Error('Please select a valid image file');
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      throw new Error('File size should be less than 10MB');
+    }
+
+    // Create preview URL for original image
+    const originalImageUrl = URL.createObjectURL(file);
+
+    // Set initial state
+    setRoomImage({
+      originalImage: originalImageUrl,
+      processedImage: null,
+      isProcessing: true,
+      error: null
+    });
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('http://202.4.127.187:6880/remove-floor-base64', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: ApiResponse = await response.json();
+      
+      if (data.success) {
+        setRoomImage(prev => prev ? {
+          ...prev,
+          processedImage: data.result_base64,
+          isProcessing: false,
+          error: null
+        } : null);
+      } else {
+        throw new Error(data.message || 'Floor removal failed');
+      }
+    } catch (error) {
+      console.error('Room image processing error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      
+      setRoomImage(prev => prev ? {
+        ...prev,
+        isProcessing: false,
+        error: errorMessage
+      } : null);
+      
+      // Re-throw to allow component to handle the error
+      throw error;
+    }
+  };
+
+  const clearRoomImage = () => {
+    if (roomImage?.originalImage) {
+      URL.revokeObjectURL(roomImage.originalImage);
+    }
+    setRoomImage(null);
+  };
 
   const addCustomTexture = (texture: Texture) => {
     setCustomTextures(prev => [...prev, texture]);
@@ -288,6 +378,10 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
     setShowWallGrout,
     showFloorGrout,
     setShowFloorGrout,
+    roomImage,
+    setRoomImage,
+    uploadRoomImage,
+    clearRoomImage,
     getSelectedTexture,
     getSelectedWallColor,
     selectTexture,

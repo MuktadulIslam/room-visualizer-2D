@@ -1,6 +1,7 @@
 import { useTexture, Texture } from '@/context/TextureContext';
 import { useState } from 'react';
 import CustomTextureUpload from '../CustomTextureUpload';
+import RoomUpload from '../RoomUpload';
 import DecorationPanelSelection from './DecorationPanelSelection';
 import GroutDesign from './GroutDesign';
 import WallColors from './WallColors';
@@ -21,6 +22,9 @@ export default function Sidebar() {
             <DecorationPanelSelection />
 
             <div className="space-y-3 overflow-y-auto p-2 h-full w-full pb-20">
+                {/* Room Upload Section */}
+                <RoomUpload />
+
                 <GroutDesign />
                 <WallColors />
 
