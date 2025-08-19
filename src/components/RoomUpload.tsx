@@ -1,15 +1,16 @@
 import React, { useState, useRef } from 'react';
 import Image from 'next/image';
-import { useTexture } from '@/context/TextureContext';
+import { useTexture, ProcessingType } from '@/context/TextureContext';
 
 export default function RoomUpload() {
     const { roomImage, uploadRoomImage, clearRoomImage } = useTexture();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [dragActive, setDragActive] = useState(false);
+    const [processingType, setProcessingType] = useState<ProcessingType>('remove-floor');
 
     const handleFileSelect = async (file: File) => {
         try {
-            await uploadRoomImage(file);
+            await uploadRoomImage(file, processingType);
         } catch (error) {
             console.error('Upload failed:', error);
             // Error is already set in the context
@@ -54,6 +55,54 @@ export default function RoomUpload() {
         }
     };
 
+    const getProcessingTypeLabel = () => {
+        switch (processingType) {
+            case 'remove-floor':
+                return 'Remove Floor';
+            case 'remove-wall':
+                return 'Remove Wall';
+            default:
+                return 'Process';
+        }
+    };
+
+    const getProcessingTypeDescription = () => {
+        switch (processingType) {
+            case 'remove-floor':
+                return 'Floor will be removed and made transparent';
+            case 'remove-wall':
+                return 'Main wall will be removed and made transparent';
+            default:
+                return '';
+        }
+    };
+
+    const getSuccessMessage = () => {
+        if (!roomImage?.processedImage || roomImage.isProcessing) return '';
+        
+        switch (roomImage.processingType) {
+            case 'remove-floor':
+                return 'Floor removed successfully! Your furniture will now use this layout.';
+            case 'remove-wall':
+                return 'Wall removed successfully! Your furniture will now use this layout.';
+            default:
+                return 'Room processed successfully!';
+        }
+    };
+
+    const getProcessedImageLabel = () => {
+        if (!roomImage?.processedImage) return '';
+        
+        switch (roomImage.processingType) {
+            case 'remove-floor':
+                return 'Processed Room (No Floor)';
+            case 'remove-wall':
+                return 'Processed Room (No Wall)';
+            default:
+                return 'Processed Room';
+        }
+    };
+
     return (
         <div className="space-y-4 p-3 bg-white border border-gray-300 rounded-lg">
             <div className="flex items-center justify-between">
@@ -73,6 +122,42 @@ export default function RoomUpload() {
                     </button>
                 )}
             </div>
+
+            {/* Processing Type Selection */}
+            {!roomImage && (
+                <div className="space-y-3">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Processing Type
+                        </label>
+                        <div className="flex bg-gray-100 rounded-lg p-1">
+                            <button
+                                onClick={() => setProcessingType('remove-floor')}
+                                className={`flex-1 px-3 py-2 rounded-md transition-colors duration-200 text-sm font-medium ${
+                                    processingType === 'remove-floor'
+                                        ? 'bg-white text-blue-600 shadow-sm'
+                                        : 'text-gray-600 hover:text-gray-800'
+                                }`}
+                            >
+                                Remove Floor
+                            </button>
+                            <button
+                                onClick={() => setProcessingType('remove-wall')}
+                                className={`flex-1 px-3 py-2 rounded-md transition-colors duration-200 text-sm font-medium ${
+                                    processingType === 'remove-wall'
+                                        ? 'bg-white text-blue-600 shadow-sm'
+                                        : 'text-gray-600 hover:text-gray-800'
+                                }`}
+                            >
+                                Remove Wall
+                            </button>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                            {getProcessingTypeDescription()}
+                        </p>
+                    </div>
+                </div>
+            )}
 
             {!roomImage ? (
                 <div
@@ -104,6 +189,9 @@ export default function RoomUpload() {
                             <span className="font-medium text-blue-600">Click to upload</span> or drag and drop
                         </p>
                         <p className="text-xs text-gray-500">PNG, JPG, WebP up to 10MB</p>
+                        <p className="text-xs font-medium text-blue-600">
+                            Will {getProcessingTypeLabel().toLowerCase()}
+                        </p>
                     </div>
                 </div>
             ) : (
@@ -112,7 +200,9 @@ export default function RoomUpload() {
                     {roomImage.isProcessing && (
                         <div className="flex items-center justify-center p-4 bg-blue-50 border border-blue-200 rounded-lg">
                             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500 mr-3"></div>
-                            <span className="text-sm text-blue-700">Processing your room image...</span>
+                            <span className="text-sm text-blue-700">
+                                {processingType === 'remove-floor' ? 'Removing floor from' : 'Removing wall from'} your room image...
+                            </span>
                         </div>
                     )}
 
@@ -130,8 +220,17 @@ export default function RoomUpload() {
                                 <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                 </svg>
-                                Room processed successfully! Your furniture will now use this layout.
+                                {getSuccessMessage()}
                             </div>
+                        </div>
+                    )}
+
+                    {/* Current Processing Type Display */}
+                    {roomImage && (
+                        <div className="p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p className="text-xs text-blue-700 font-medium">
+                                Processing Type: {roomImage.processingType === 'remove-floor' ? 'Remove Floor' : 'Remove Wall'}
+                            </p>
                         </div>
                     )}
 
@@ -151,7 +250,7 @@ export default function RoomUpload() {
 
                         {roomImage.processedImage && (
                             <div className="relative">
-                                <p className="text-xs font-medium text-gray-600 mb-2">Processed Room (No Floor)</p>
+                                <p className="text-xs font-medium text-gray-600 mb-2">{getProcessedImageLabel()}</p>
                                 <div className="relative w-full h-32 bg-gray-100 rounded-lg overflow-hidden border">
                                     <div
                                         className="w-full h-full"
@@ -161,7 +260,7 @@ export default function RoomUpload() {
                                     >
                                         <Image
                                             src={roomImage.processedImage}
-                                            alt="Room without floor"
+                                            alt={roomImage.processingType === 'remove-floor' ? 'Room without floor' : 'Room without wall'}
                                             fill
                                             className="object-cover"
                                         />
