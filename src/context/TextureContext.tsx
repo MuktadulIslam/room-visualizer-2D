@@ -4,7 +4,6 @@ import { defaultTextures } from './uitls/defaultTextures';
 
 // Types
 export type TextureType = 'wall' | 'floor' | 'both';
-export type ProcessingType = 'remove-floor' | 'remove-wall' | 'none';
 
 export interface Texture {
   id: string;
@@ -25,22 +24,6 @@ export interface WallColor {
   name: string;
   hex: string;
   isCustom?: boolean; // Flag for custom colors
-}
-
-// Room image interface - Updated to support both floor and wall removal
-export interface RoomImage {
-  originalImage: string;
-  processedImage: string | null;
-  processingType: ProcessingType;
-  isProcessing: boolean;
-  error: string | null;
-}
-
-// API Response interfaces
-interface ApiResponse {
-  success: boolean;
-  result_base64: string;
-  message: string;
 }
 
 // Predefined wall colors
@@ -92,16 +75,6 @@ interface TextureContextType {
   showFloorGrout: boolean;
   setShowFloorGrout: (show: boolean) => void;
   
-  // Room image upload functionality - Updated for both wall and floor removal
-  roomImage: RoomImage | null;
-  setRoomImage: (roomImage: RoomImage | null) => void;
-  uploadRoomImage: (file: File, processingType: ProcessingType) => Promise<void>;
-  clearRoomImage: () => void;
-  
-  // Boolean flags for removed surfaces
-  isWallRemoved: boolean;
-  isFloorRemoved: boolean;
-  
   // Helper methods
   getSelectedTexture: () => Texture | null;
   getSelectedWallColor: () => WallColor | null;
@@ -117,6 +90,7 @@ interface TextureContextType {
   hasWallTexture: () => boolean;
 }
 
+
 // Create Context
 const TextureContext = createContext<TextureContextType | undefined>(undefined);
 
@@ -127,8 +101,6 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [floorTexture, setFloorTexture] = useState<Texture | null>(null);
   const [wallColor, setWallColor] = useState<WallColor | null>(null);
   const [customTextures, setCustomTextures] = useState<Texture[]>([]);
-  const [roomImage, setRoomImage] = useState<RoomImage | null>(null);
-  
   // Make defaultTextures mutable so we can update their sizes
   const [mutableDefaultTextures, setMutableDefaultTextures] = useState<Texture[]>(defaultTextures);
   
@@ -140,7 +112,8 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [showWallGrout, setShowWallGrout] = useState<boolean>(true);
   const [showFloorGrout, setShowFloorGrout] = useState<boolean>(true);
 
-  // Set default values on mount
+  // Note: Custom textures are stored in memory during the session
+  // In a real application, you would persist these to a database or localStorage
   useEffect(() => {
     // Set default off-white color for walls (no default texture)
     if (!wallColor && !wallTexture) {
@@ -159,102 +132,6 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
       }
     }
   }, [wallColor, wallTexture, floorTexture, customTextures, mutableDefaultTextures]);
-
-  // Room image upload function - Updated to support both wall and floor removal
-  const uploadRoomImage = async (file: File, processingType: ProcessingType): Promise<void> => {
-    // Validate file
-    if (!file.type.startsWith('image/')) {
-      throw new Error('Please select a valid image file');
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      throw new Error('File size should be less than 10MB');
-    }
-
-    // Create preview URL for original image
-    const originalImageUrl = URL.createObjectURL(file);
-
-    // Set initial state
-    setRoomImage({
-      originalImage: originalImageUrl,
-      processedImage: null,
-      processingType: processingType,
-      isProcessing: true,
-      error: null
-    });
-
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      // Determine the API endpoint based on processing type
-      let apiEndpoint: string;
-      switch (processingType) {
-        case 'remove-floor':
-          // apiEndpoint = 'http://127.0.0.1:8000/remove-floor-base64';
-          apiEndpoint = 'https://roomvisualizer.streamstech.com/api/remove-floor-base64';
-          break;
-        case 'remove-wall':
-          // apiEndpoint = 'http://127.0.0.1:8000/remove-wall-base64';
-          apiEndpoint = 'https://roomvisualizer.streamstech.com/api/remove-wall-base64';
-          break;
-        default:
-          throw new Error('Invalid processing type');
-      }
-
-      const response = await fetch(apiEndpoint, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data: ApiResponse = await response.json();
-      
-      if (data.success) {
-        setRoomImage(prev => prev ? {
-          ...prev,
-          processedImage: data.result_base64,
-          isProcessing: false,
-          error: null
-        } : null);
-      } else {
-        throw new Error(data.message || `${processingType} failed`);
-      }
-    } catch (error) {
-      console.error('Room image processing error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
-      
-      setRoomImage(prev => prev ? {
-        ...prev,
-        isProcessing: false,
-        error: errorMessage
-      } : null);
-      
-      // Re-throw to allow component to handle the error
-      throw error;
-    }
-  };
-
-  const clearRoomImage = () => {
-    if (roomImage?.originalImage) {
-      URL.revokeObjectURL(roomImage.originalImage);
-    }
-    setRoomImage(null);
-  };
-
-  // Computed boolean values for removed surfaces
-  const isWallRemoved = roomImage?.processedImage !== null && 
-                       roomImage?.processingType === 'remove-wall' && 
-                       !roomImage?.isProcessing && 
-                       !roomImage?.error;
-
-  const isFloorRemoved = roomImage?.processedImage !== null && 
-                        roomImage?.processingType === 'remove-floor' && 
-                        !roomImage?.isProcessing && 
-                        !roomImage?.error;
 
   const addCustomTexture = (texture: Texture) => {
     setCustomTextures(prev => [...prev, texture]);
@@ -411,12 +288,6 @@ export const TextureProvider: React.FC<{ children: ReactNode }> = ({ children })
     setShowWallGrout,
     showFloorGrout,
     setShowFloorGrout,
-    roomImage,
-    setRoomImage,
-    uploadRoomImage,
-    clearRoomImage,
-    isWallRemoved,
-    isFloorRemoved,
     getSelectedTexture,
     getSelectedWallColor,
     selectTexture,

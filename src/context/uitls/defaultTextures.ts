@@ -1,7 +1,6 @@
 import { Texture } from "../TextureContext";
 
 export const defaultTextures: Texture[] = [
-  // Floor/Both textures
   {
     id: '1',
     texture_img: '/textures/floor/tiles1_glossy.webp',
@@ -65,7 +64,6 @@ export const defaultTextures: Texture[] = [
     is_glossy: false,
     type: 'both'
   },
-  // Floor-only textures
   {
     id: '8',
     texture_img: '/textures/floor/tiles8_glossy.webp',
@@ -83,33 +81,5 @@ export const defaultTextures: Texture[] = [
     size: [60, 120],
     is_glossy: true,
     type: 'floor'
-  },
-  // Wall-specific textures (you can add these if you have wall texture images)
-  {
-    id: 'wall-1',
-    texture_img: '/textures/floor/tiles1_glossy.webp', // Reusing for demo - replace with actual wall textures
-    show_img: '/textures/floor/tiles1_glossy.webp',
-    name: 'Wall Tiles-1',
-    size: [20, 25],
-    is_glossy: true,
-    type: 'wall'
-  },
-  {
-    id: 'wall-2',
-    texture_img: '/textures/floor/tiles2_glossy.webp', // Reusing for demo - replace with actual wall textures
-    show_img: '/textures/floor/tiles2_glossy.webp',
-    name: 'Wall Tiles-2',
-    size: [25, 30],
-    is_glossy: false,
-    type: 'wall'
-  },
-  {
-    id: 'wall-3',
-    texture_img: '/textures/floor/tiles4_matt.webp', // Reusing for demo - replace with actual wall textures
-    show_img: '/textures/floor/tiles4_matt.webp',
-    name: 'Wall Tiles-3',
-    size: [15, 30],
-    is_glossy: false,
-    type: 'wall'
   },
 ];

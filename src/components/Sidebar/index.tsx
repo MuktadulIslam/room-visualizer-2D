@@ -1,11 +1,11 @@
 import { useTexture, Texture } from '@/context/TextureContext';
 import { useState } from 'react';
 import CustomTextureUpload from '../CustomTextureUpload';
-import RoomUpload from '../RoomUpload';
 import DecorationPanelSelection from './DecorationPanelSelection';
 import GroutDesign from './GroutDesign';
 import WallColors from './WallColors';
 import TextureMapping from './TextureMapping';
+import Link from 'next/link';
 
 export default function Sidebar() {
     const { selectTexture, addCustomTexture } = useTexture();
@@ -22,8 +22,13 @@ export default function Sidebar() {
             <DecorationPanelSelection />
 
             <div className="space-y-3 overflow-y-auto p-2 h-full w-full pb-20">
-                {/* Room Upload Section */}
-                <RoomUpload />
+                <Link href={"/custom"} className="w-full h-16 border-2 border-gray-600 border-dashed rounded-lg flex justify-center items-center text-gray-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+                    </svg>
+
+                    <span className="text-lg font-semibold">Design Your Room</span>
+                </Link>
 
                 <GroutDesign />
                 <WallColors />
