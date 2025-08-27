@@ -76,10 +76,12 @@ export default function RoomRenovationSidebar({
 
             {/* Room Image - Always required */}
             <ImageUpload
-              label="Room Image *"
+              label="Room Image"
+              header={true}
               onImageSelect={onRoomImageSelect}
               preview={roomPreview}
               className="w-full"
+              required={true}
             />
 
             {/* Floor Tile Selection - Required for floor tiling types */}
@@ -87,7 +89,7 @@ export default function RoomRenovationSidebar({
               renovationType === 'complete-tiling' ||
               renovationType === 'floor-tiling-wall-coloring') && (
                 <TileSelectionPanel
-                  label="Floor Tile *"
+                  label="Floor"
                   selectedTile={floorTile}
                   selectedTilePreview={floorTilePreview}
                   onTileSelect={onFloorTileSelect}
@@ -99,7 +101,7 @@ export default function RoomRenovationSidebar({
             {(renovationType === 'wall-tiling' ||
               renovationType === 'complete-tiling') && (
                 <TileSelectionPanel
-                  label="Wall Tile *"
+                  label="Wall"
                   selectedTile={wallTile}
                   selectedTilePreview={wallTilePreview}
                   onTileSelect={onWallTileSelect}

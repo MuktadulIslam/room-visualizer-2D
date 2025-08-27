@@ -4,18 +4,22 @@ import Image from 'next/image';
 
 interface ImageUploadProps {
   label: string;
+  header?: boolean
   onImageSelect: (file: File) => void;
   acceptedTypes?: string;
   preview?: string;
   className?: string;
+  required?: boolean;
 }
 
 export default function ImageUpload({
   label,
+  header = false,
   onImageSelect,
   acceptedTypes = "image/*",
   preview,
-  className = ""
+  className = "",
+  required = false
 }: ImageUploadProps) {
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -56,8 +60,8 @@ export default function ImageUpload({
 
   return (
     <div className={`space-y-2 ${className}`}>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        {label}
+      <label className={`block ${header ? 'text-base' : 'text-sm'} font-medium text-gray-700 mb-2`}>
+        {label} {required && <span className="text-red-500 text-base">*</span>}
       </label>
       
       <div

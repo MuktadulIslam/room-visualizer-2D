@@ -26,7 +26,7 @@ export default function TileSelectionPanel({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Filter textures based on type
-  const availableTextures = defaultTextures.filter(texture => 
+  const availableTextures = defaultTextures.filter(texture =>
     texture.type === tileType || texture.type === 'both'
   );
 
@@ -36,7 +36,7 @@ export default function TileSelectionPanel({
       const response = await fetch(texture.texture_img);
       const blob = await response.blob();
       const file = new File([blob], `${texture.name}.webp`, { type: 'image/webp' });
-      
+
       setSelectedPresetTile(texture);
       onTileSelect(file);
     } catch (error) {
@@ -52,7 +52,7 @@ export default function TileSelectionPanel({
         alert('File size must be less than 10MB');
         return;
       }
-      
+
       setSelectedPresetTile(null); // Clear preset selection when custom file is selected
       onTileSelect(file);
     } else {
@@ -100,8 +100,8 @@ export default function TileSelectionPanel({
 
   return (
     <div className="space-y-4">
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        {label}
+      <label className="block text-base font-medium text-gray-700 mb-2">
+        {label} Tile<span className='text-red-500 text-base'>*</span>
       </label>
 
       {/* Current Selection Display */}
@@ -123,7 +123,7 @@ export default function TileSelectionPanel({
                   {selectedPresetTile ? selectedPresetTile.name : selectedTile?.name || 'Custom Tile'}
                 </span>
                 <span className="block text-sm text-blue-700">
-                  {selectedPresetTile 
+                  {selectedPresetTile
                     ? `${selectedPresetTile.size[0]}×${selectedPresetTile.size[1]}cm - ${selectedPresetTile.is_glossy ? 'Glossy' : 'Matt'}`
                     : 'Custom uploaded tile'
                   }
@@ -147,7 +147,7 @@ export default function TileSelectionPanel({
       <div className="space-y-4">
         {/* Preset Tiles Section */}
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-3">Preset Tiles</h4>
+          <h4 className="text-sm font-medium text-gray-700 mb-3"> {label} Preset Tiles</h4>
           <div className="grid grid-cols-3 gap-2 pr-0.5 max-h-56 overflow-y-auto">
             {availableTextures.map((texture) => (
               <button
@@ -161,7 +161,7 @@ export default function TileSelectionPanel({
                   }
                 `}
               >
-                <div className="aspect-square">
+                <div className="aspect-square peer">
                   <Image
                     src={texture.show_img}
                     alt={texture.name}
@@ -170,7 +170,16 @@ export default function TileSelectionPanel({
                     className="w-full h-full object-cover"
                   />
                 </div>
-                
+
+                {/* Hover overlay with details */}
+                <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-60 transition-opacity duration-200 flex flex-col items-center justify-center">
+                  <div className="text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-center px-1">
+                    <p className="font-semibold">{texture.name}</p>
+                    <p className="text-xs opacity-90">{texture.size[0]}×{texture.size[1]}cm</p>
+                    <p className="text-xs opacity-90">{texture.is_glossy ? 'Glossy' : 'Matt'}</p>
+                  </div>
+                </div>
+
                 {/* Selection indicator */}
                 {selectedPresetTile?.id === texture.id && (
                   <div className="absolute top-1 right-1">
@@ -181,15 +190,7 @@ export default function TileSelectionPanel({
                     </div>
                   </div>
                 )}
-                
-                {/* Hover overlay with details */}
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-60 transition-opacity duration-200 flex flex-col items-center justify-center">
-                  <div className="text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-center px-1">
-                    <p className="font-semibold">{texture.name}</p>
-                    <p className="text-xs opacity-90">{texture.size[0]}×{texture.size[1]}cm</p>
-                    <p className="text-xs opacity-90">{texture.is_glossy ? 'Glossy' : 'Matt'}</p>
-                  </div>
-                </div>
+
               </button>
             ))}
           </div>
@@ -207,13 +208,13 @@ export default function TileSelectionPanel({
 
         {/* Custom Upload Section */}
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-3">Or Upload Custom Tile</h4>
+          <h4 className="text-sm font-medium text-gray-700 mb-3">Or Upload Custom {label} Tile</h4>
           <div
             className={`
               relative border-2 border-dashed rounded-lg p-6 text-center cursor-pointer
               transition-colors duration-200
-              ${dragOver 
-                ? 'border-blue-400 bg-blue-50' 
+              ${dragOver
+                ? 'border-blue-400 bg-blue-50'
                 : 'border-gray-300 hover:border-gray-400'
               }
               ${!selectedTilePreview ? 'bg-white' : 'bg-gray-50'}
