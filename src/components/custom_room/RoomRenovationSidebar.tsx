@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import ImageUpload from '@/components/custom_room/ImageUpload';
+import TileSelectionPanel from '@/components/custom_room/TileSelectionPanel';
 import { TileParameters, ColorPicker } from '@/components/custom_room/ParameterControls';
 import RenovationDropdown from '@/components/custom_room/RenovationDropdown';
 import { RenovationType } from '@/components/custom_room/RenovationTypes';
@@ -26,6 +27,9 @@ interface RoomRenovationSidebarProps {
   canProcess: boolean;
   isProcessing: boolean;
   error: string;
+  // Store the actual file objects for tile selections
+  floorTile: File | null;
+  wallTile: File | null;
 }
 
 export default function RoomRenovationSidebar({
@@ -46,7 +50,9 @@ export default function RoomRenovationSidebar({
   onProcess,
   canProcess,
   isProcessing,
-  error
+  error,
+  floorTile,
+  wallTile
 }: RoomRenovationSidebarProps) {
   return (
     <div className="w-96 bg-white shadow-lg flex flex-col h-screen">
@@ -76,26 +82,28 @@ export default function RoomRenovationSidebar({
               className="w-full"
             />
 
-            {/* Floor Tile - Required for floor tiling types */}
+            {/* Floor Tile Selection - Required for floor tiling types */}
             {(renovationType === 'floor-tiling' ||
               renovationType === 'complete-tiling' ||
               renovationType === 'floor-tiling-wall-coloring') && (
-                <ImageUpload
+                <TileSelectionPanel
                   label="Floor Tile *"
-                  onImageSelect={onFloorTileSelect}
-                  preview={floorTilePreview}
-                  className="w-full"
+                  selectedTile={floorTile}
+                  selectedTilePreview={floorTilePreview}
+                  onTileSelect={onFloorTileSelect}
+                  tileType="floor"
                 />
               )}
 
-            {/* Wall Tile - Required for wall tiling types */}
+            {/* Wall Tile Selection - Required for wall tiling types */}
             {(renovationType === 'wall-tiling' ||
               renovationType === 'complete-tiling') && (
-                <ImageUpload
+                <TileSelectionPanel
                   label="Wall Tile *"
-                  onImageSelect={onWallTileSelect}
-                  preview={wallTilePreview}
-                  className="w-full"
+                  selectedTile={wallTile}
+                  selectedTilePreview={wallTilePreview}
+                  onTileSelect={onWallTileSelect}
+                  tileType="wall"
                 />
               )}
           </div>

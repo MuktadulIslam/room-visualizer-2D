@@ -6,7 +6,7 @@ import RoomRenovationSidebar from '@/components/custom_room/RoomRenovationSideba
 import { RenovationType } from '@/components/custom_room/RenovationTypes';
 import { RoomRenovationAPI, TilingParams, CompleteTilingParams } from '@/lib/api';
 
-export default function Home() {
+export default function CustomRoomPage() {
   // State for renovation type
   const [renovationType, setRenovationType] = useState<RenovationType>('floor-tiling');
 
@@ -76,7 +76,7 @@ export default function Home() {
       switch (renovationType) {
         case 'floor-tiling':
           if (!floorTile) {
-            setError('Please upload a floor tile image');
+            setError('Please select a floor tile');
             return;
           }
           resultBlob = await RoomRenovationAPI.floorTiling(roomImage, floorTile, floorParams);
@@ -84,7 +84,7 @@ export default function Home() {
 
         case 'complete-tiling':
           if (!floorTile || !wallTile) {
-            setError('Please upload both floor and wall tile images');
+            setError('Please select both floor and wall tiles');
             return;
           }
           const completeParams: CompleteTilingParams = {
@@ -103,7 +103,7 @@ export default function Home() {
 
         case 'wall-tiling':
           if (!wallTile) {
-            setError('Please upload a wall tile image');
+            setError('Please select a wall tile');
             return;
           }
           resultBlob = await RoomRenovationAPI.wallTiling(roomImage, wallTile, wallParams);
@@ -115,7 +115,7 @@ export default function Home() {
 
         case 'floor-tiling-wall-coloring':
           if (!floorTile) {
-            setError('Please upload a floor tile image');
+            setError('Please select a floor tile');
             return;
           }
           resultBlob = await RoomRenovationAPI.floorTilingWallColoring(roomImage, floorTile, wallColor, floorParams);
@@ -178,6 +178,8 @@ export default function Home() {
         canProcess={canProcess()}
         isProcessing={isProcessing}
         error={error}
+        floorTile={floorTile}
+        wallTile={wallTile}
       />
 
       {/* Room Display Area */}
