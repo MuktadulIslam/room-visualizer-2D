@@ -1,0 +1,8 @@
+services:
+  fastapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    user: root
+    ports:
+      - "6880:8000"

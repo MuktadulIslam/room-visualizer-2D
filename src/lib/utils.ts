@@ -30,4 +30,4 @@ export function downloadImage(blob: Blob, filename: string) {
 
 export const API_BASE_URL = process.env.NODE_ENV === 'development' 
   ? 'http://localhost:8000' 
-  : 'https://your-production-api.com'
+  : 'https://roomvisualizer.streamstech.com/api/'
