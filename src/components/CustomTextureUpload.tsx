@@ -22,8 +22,8 @@ export default function CustomTextureUpload({ onClose, onUpload }: CustomTexture
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [textureName, setTextureName] = useState('');
-  const [textureWidth, setTextureWidth] = useState<number | string>(30);
-  const [textureHeight, setTextureHeight] = useState<number | string>(25);
+  const [textureLength, setTextureLength] = useState<number | string>(30);
+  const [textureWidth, setTextureWidth] = useState<number | string>(25);
   const [isGlossy, setIsGlossy] = useState(false);
   const [textureType, setTextureType] = useState<TextureType>('both');
   const [isUploading, setIsUploading] = useState(false);
@@ -64,7 +64,7 @@ export default function CustomTextureUpload({ onClose, onUpload }: CustomTexture
       return;
     }
 
-    if (typeof textureWidth !== 'number' || typeof textureHeight !== 'number' || textureWidth <= 0 || textureHeight <= 0) {
+    if (typeof textureLength !== 'number' || typeof textureWidth !== 'number' || textureLength <= 0 || textureWidth <= 0) {
       alert('Please enter valid dimensions (greater than 0)');
       return;
     }
@@ -83,7 +83,7 @@ export default function CustomTextureUpload({ onClose, onUpload }: CustomTexture
           texture_img: dataUrl,
           show_img: dataUrl,
           name: textureName.trim(),
-          size: [Number(textureWidth), Number(textureHeight)] as [number, number],
+          size: [Number(textureLength), Number(textureWidth)] as [number, number],
           is_glossy: isGlossy,
           type: textureType,
           isCustom: true
@@ -115,8 +115,8 @@ export default function CustomTextureUpload({ onClose, onUpload }: CustomTexture
     setSelectedFile(null);
     setPreviewUrl('');
     setTextureName('');
-    setTextureWidth(30);
-    setTextureHeight(25);
+    setTextureLength(30);
+    setTextureWidth(25);
     setIsGlossy(false);
     setTextureType('both');
     if (fileInputRef.current) {
@@ -192,7 +192,36 @@ export default function CustomTextureUpload({ onClose, onUpload }: CustomTexture
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Width (cm)
+                Length (inch)
+              </label>
+              <input
+                type="number"
+                value={textureLength}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '') {
+                    setTextureLength('');
+                  } else {
+                    const numValue = parseInt(value);
+                    if (!isNaN(numValue) && numValue >= 1 && numValue <= 200) {
+                      setTextureLength(numValue);
+                    }
+                  }
+                }}
+                onBlur={(e) => {
+                  if (e.target.value === '' || parseInt(e.target.value) < 1) {
+                    setTextureLength(30);
+                  }
+                }}
+                min="6"
+                max="200"
+                placeholder="30"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Width (inch)
               </label>
               <input
                 type="number"
@@ -210,39 +239,10 @@ export default function CustomTextureUpload({ onClose, onUpload }: CustomTexture
                 }}
                 onBlur={(e) => {
                   if (e.target.value === '' || parseInt(e.target.value) < 1) {
-                    setTextureWidth(30);
+                    setTextureWidth(25);
                   }
                 }}
-                min="1"
-                max="200"
-                placeholder="30"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Height (cm)
-              </label>
-              <input
-                type="number"
-                value={textureHeight}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value === '') {
-                    setTextureHeight('');
-                  } else {
-                    const numValue = parseInt(value);
-                    if (!isNaN(numValue) && numValue >= 1 && numValue <= 200) {
-                      setTextureHeight(numValue);
-                    }
-                  }
-                }}
-                onBlur={(e) => {
-                  if (e.target.value === '' || parseInt(e.target.value) < 1) {
-                    setTextureHeight(25);
-                  }
-                }}
-                min="1"
+                min="6"
                 max="200"
                 placeholder="25"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"

@@ -1,6 +1,6 @@
 import { RepeatWrapping, CanvasTexture } from 'three';
 
-export const repetitionThreshold = 2 / 5;
+export const repetitionThreshold = 1 / 9;
 
 // Function to create texture with grout lines
 export const createTextureWithGrout = (

@@ -6,7 +6,7 @@ export const defaultTextures: Texture[] = [
     texture_img: '/textures/floor/tiles1_glossy.webp',
     show_img: '/textures/floor/tiles1_glossy.webp',
     name: 'Tiles-1',
-    size: [30, 30],
+    size: [12, 12],
     is_glossy: true,
     type: 'both'
   },
@@ -15,7 +15,7 @@ export const defaultTextures: Texture[] = [
     texture_img: '/textures/floor/tiles2_glossy.webp',
     show_img: '/textures/floor/tiles2_glossy.webp',
     name: 'Tiles-2',
-    size: [30, 30],
+    size: [12, 12],
     is_glossy: true,
     type: 'both'
   },
@@ -24,7 +24,7 @@ export const defaultTextures: Texture[] = [
     texture_img: '/textures/floor/tiles3_glossy.webp',
     show_img: '/textures/floor/tiles3_glossy.webp',
     name: 'Tiles-3',
-    size: [30, 30],
+    size: [10, 10],
     is_glossy: true,
     type: 'both'
   },
@@ -33,7 +33,7 @@ export const defaultTextures: Texture[] = [
     texture_img: '/textures/floor/tiles4_matt.webp',
     show_img: '/textures/floor/tiles4_matt.webp',
     name: 'Tiles-4',
-    size: [30, 30],
+    size: [10, 10],
     is_glossy: false,
     type: 'both'
   },
@@ -42,7 +42,7 @@ export const defaultTextures: Texture[] = [
     texture_img: '/textures/floor/tiles5_matt.webp',
     show_img: '/textures/floor/tiles5_matt.webp',
     name: 'Tiles-5',
-    size: [30, 30],
+    size: [12, 12],
     is_glossy: false,
     type: 'both'
   },
@@ -51,7 +51,7 @@ export const defaultTextures: Texture[] = [
     texture_img: '/textures/floor/tiles6_matt.webp',
     show_img: '/textures/floor/tiles6_matt.webp',
     name: 'Tiles-6',
-    size: [30, 30],
+    size: [12, 12],
     is_glossy: false,
     type: 'both'
   },
@@ -60,7 +60,7 @@ export const defaultTextures: Texture[] = [
     texture_img: '/textures/floor/tiles7_matt.webp',
     show_img: '/textures/floor/tiles7_matt.webp',
     name: 'Tiles-7',
-    size: [30, 30],
+    size: [24, 24],
     is_glossy: false,
     type: 'both'
   },
@@ -69,7 +69,7 @@ export const defaultTextures: Texture[] = [
     texture_img: '/textures/floor/tiles8_glossy.webp',
     show_img: '/textures/floor/tiles8_glossy.webp',
     name: 'Tiles-8',
-    size: [60, 120],
+    size: [16, 32],
     is_glossy: true,
     type: 'floor'
   },
@@ -78,7 +78,7 @@ export const defaultTextures: Texture[] = [
     texture_img: '/textures/floor/tiles9_glossy.webp',
     show_img: '/textures/floor/tiles9_glossy.webp',
     name: 'Hardwood Flooring',
-    size: [60, 120],
+    size: [16, 32],
     is_glossy: true,
     type: 'floor'
   },

@@ -30,13 +30,13 @@ export default function TextureMapping() {
         const width = typeof editWidth === 'string' ? parseInt(editWidth) : editWidth;
         const height = typeof editHeight === 'string' ? parseInt(editHeight) : editHeight;
 
-        if (width > 0 && height > 0 && width <= 500 && height <= 500) {
+        if (width > 5 && height > 5 && width <= 200 && height <= 200) {
             updateTextureSize(textureId, [width, height]);
             setEditingTexture(null);
             setEditWidth('');
             setEditHeight('');
         } else {
-            alert('Please enter valid dimensions between 1 and 500 cm');
+            alert('Please enter valid dimensions between 6 and 200 inch');
         }
     };
 
@@ -151,8 +151,8 @@ export default function TextureMapping() {
                                         }}
                                         className="w-16 px-2 py-1 text-xs border border-gray-300 rounded"
                                         placeholder="W"
-                                        min="1"
-                                        max="500"
+                                        min="6"
+                                        max="200"
                                     />
                                     <span className="text-xs text-gray-500">×</span>
                                     <input
@@ -176,10 +176,10 @@ export default function TextureMapping() {
                                         }}
                                         className="w-16 px-2 py-1 text-xs border border-gray-300 rounded"
                                         placeholder="H"
-                                        min="1"
-                                        max="500"
+                                        min="6"
+                                        max="200"
                                     />
-                                    <span className="text-xs text-gray-500">cm</span>
+                                    <span className="text-xs text-gray-500">inch</span>
                                 </div>
                                 <div className="flex gap-1">
                                     <button
@@ -203,11 +203,9 @@ export default function TextureMapping() {
                                 </div>
                             </div>
                         ) : (
-                            <div>
-                                <p className='text-sm'>
-                                    Size: {texture.size[0]}×{texture.size[1]}cm
-                                    <span className="text-xs text-gray-500 ml-1">(Double-click to edit)</span>
-                                </p>
+                            <div className='text-sm'>
+                                <p>Size: {texture.size[0]}×{texture.size[1]} inch</p>
+                                <p className="text-xs text-gray-500">(Double-click to edit)</p>
                             </div>
                         )}
 

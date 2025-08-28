@@ -32,8 +32,8 @@ export default function Floor ({ length, width }: FloorProps) {
 
         // Configure texture mapping - FIXED CALCULATION
         if (floorTexture.size) {
-            // Convert floor dimensions from Three.js units to centimeters
-            // Assuming 1 Three.js unit = 100cm for proper scaling
+            // Convert floor dimensions from Three.js units to inches
+            // Assuming 1 Three.js unit = 100inch for proper scaling
             const floorLengthCm = length * 100;
             const floorWidthCm = width * 100;
             
@@ -43,7 +43,7 @@ export default function Floor ({ length, width }: FloorProps) {
             
             // Apply repetition threshold
             const repeatX = tilesAlongLength * repetitionThreshold*1.2;
-            const repeatY = tilesAlongWidth * repetitionThreshold*1.5;
+            const repeatY = tilesAlongWidth * repetitionThreshold*1.7;
 
             console.log('Floor texture details:', {
                 floorDimensions: { length, width },

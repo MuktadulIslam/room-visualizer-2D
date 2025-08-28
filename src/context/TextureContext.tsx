@@ -10,7 +10,7 @@ export interface Texture {
   texture_img: string;
   show_img: string;
   name: string;
-  size: [number, number]; // [width, height] in cm
+  size: [number, number]; // [width, height] in inch
   is_glossy: boolean;
   type: TextureType; // Specifies if texture can be used for wall, floor, or both
   isCustom?: boolean; // Flag for custom uploaded textures

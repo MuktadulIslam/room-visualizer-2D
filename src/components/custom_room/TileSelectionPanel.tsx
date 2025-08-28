@@ -124,7 +124,7 @@ export default function TileSelectionPanel({
                 </span>
                 <span className="block text-sm text-blue-700">
                   {selectedPresetTile
-                    ? `${selectedPresetTile.size[0]}×${selectedPresetTile.size[1]}cm - ${selectedPresetTile.is_glossy ? 'Glossy' : 'Matt'}`
+                    ? `${selectedPresetTile.size[0]}×${selectedPresetTile.size[1]}inch - ${selectedPresetTile.is_glossy ? 'Glossy' : 'Matt'}`
                     : 'Custom uploaded tile'
                   }
                 </span>
@@ -175,7 +175,7 @@ export default function TileSelectionPanel({
                 <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-60 transition-opacity duration-200 flex flex-col items-center justify-center">
                   <div className="text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-center px-1">
                     <p className="font-semibold">{texture.name}</p>
-                    <p className="text-xs opacity-90">{texture.size[0]}×{texture.size[1]}cm</p>
+                    <p className="text-xs opacity-90">{texture.size[0]}×{texture.size[1]}inch</p>
                     <p className="text-xs opacity-90">{texture.is_glossy ? 'Glossy' : 'Matt'}</p>
                   </div>
                 </div>
