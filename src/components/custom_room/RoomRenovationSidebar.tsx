@@ -3,10 +3,27 @@
 import { useState } from 'react';
 import ImageUpload from '@/components/custom_room/ImageUpload';
 import TileSelectionPanel from '@/components/custom_room/TileSelectionPanel';
-import { TileParameters, ColorPicker } from '@/components/custom_room/ParameterControls';
+import { ColorPicker } from '@/components/custom_room/ParameterControls';
 import RenovationDropdown from '@/components/custom_room/RenovationDropdown';
 import { RenovationType } from '@/components/custom_room/RenovationTypes';
-import { TilingParams } from '@/lib/api';
+
+interface RoomDimensions {
+  length: number; // in feet - room length
+  width: number;  // in feet - room width
+  height?: number; // in feet - wall height (only needed for wall tiling)
+}
+
+interface TileDimensions {
+  length: number; // in inches
+  width: number;  // in inches
+}
+
+interface TilingParams {
+  tilesX: number;
+  tilesY: number;
+  groutWidth: number;
+  groutColor: string;
+}
 
 interface RoomRenovationSidebarProps {
   renovationType: RenovationType;
@@ -21,13 +38,12 @@ interface RoomRenovationSidebarProps {
   wallParams: TilingParams;
   setWallParams: (params: TilingParams | ((prev: TilingParams) => TilingParams)) => void;
   onRoomImageSelect: (file: File) => void;
-  onFloorTileSelect: (file: File) => void;
-  onWallTileSelect: (file: File) => void;
-  onProcess: () => void;
+  onFloorTileSelect: (file: File, dimensions?: TileDimensions) => void;
+  onWallTileSelect: (file: File, dimensions?: TileDimensions) => void;
+  onProcess: (roomDimensions: RoomDimensions, floorTileDimensions?: TileDimensions, wallTileDimensions?: TileDimensions) => void;
   canProcess: boolean;
   isProcessing: boolean;
   error: string;
-  // Store the actual file objects for tile selections
   floorTile: File | null;
   wallTile: File | null;
 }
@@ -54,6 +70,105 @@ export default function RoomRenovationSidebar({
   floorTile,
   wallTile
 }: RoomRenovationSidebarProps) {
+  // Room dimensions state
+  const [roomDimensions, setRoomDimensions] = useState<RoomDimensions>({
+    length: 12, // default 12 feet
+    width: 10,  // default 10 feet
+    height: 9   // default 9 feet wall height
+  });
+
+  // Tile dimensions state
+  const [floorTileDimensions, setFloorTileDimensions] = useState<TileDimensions>({
+    length: 12, // default 12 inches
+    width: 12   // default 12 inches
+  });
+
+  const [wallTileDimensions, setWallTileDimensions] = useState<TileDimensions>({
+    length: 12, // default 12 inches
+    width: 12   // default 12 inches
+  });
+
+  // Calculate repetition based on room and tile dimensions
+  const calculateRepetition = (roomDim: RoomDimensions, tileDim: TileDimensions, isWall: boolean = false) => {
+    if (isWall) {
+      // For walls: use room length as wall length, wall height as wall width
+      const wallLengthInches = roomDim.length * 12;
+      const wallHeightInches = (roomDim.height || 9) * 12;
+      
+      // Calculate how many tiles fit on the wall
+      const tilesX = Math.ceil(wallLengthInches / tileDim.length);
+      const tilesY = Math.ceil(wallHeightInches / tileDim.width);
+      
+      return { tilesX, tilesY };
+    } else {
+      // For floor: use room length and width
+      const roomLengthInches = roomDim.length * 12;
+      const roomWidthInches = roomDim.width * 12;
+      
+      // Calculate how many tiles fit
+      const tilesX = Math.ceil(roomLengthInches / tileDim.length);
+      const tilesY = Math.ceil(roomWidthInches / tileDim.width);
+      
+      return { tilesX, tilesY };
+    }
+  };
+
+  // Update tile parameters when dimensions change
+  const updateFloorTileParams = (tileDim: TileDimensions) => {
+    const { tilesX, tilesY } = calculateRepetition(roomDimensions, tileDim, false);
+    setFloorParams(prev => ({ ...prev, tilesX, tilesY }));
+  };
+
+  const updateWallTileParams = (tileDim: TileDimensions) => {
+    const { tilesX, tilesY } = calculateRepetition(roomDimensions, tileDim, true);
+    setWallParams(prev => ({ ...prev, tilesX, tilesY }));
+  };
+
+  const handleRoomDimensionChange = (field: keyof RoomDimensions, value: number) => {
+    const newDimensions = { ...roomDimensions, [field]: value };
+    setRoomDimensions(newDimensions);
+    
+    // Recalculate tile repetitions based on renovation type
+    if (floorTile && (renovationType === 'floor-tiling' || renovationType === 'complete-tiling' || renovationType === 'floor-tiling-wall-coloring')) {
+      updateFloorTileParams(floorTileDimensions);
+    }
+    if (wallTile && (renovationType === 'wall-tiling' || renovationType === 'complete-tiling')) {
+      updateWallTileParams(wallTileDimensions);
+    }
+  };
+
+  const handleFloorTileDimensionChange = (field: keyof TileDimensions, value: number) => {
+    const newDimensions = { ...floorTileDimensions, [field]: value };
+    setFloorTileDimensions(newDimensions);
+    updateFloorTileParams(newDimensions);
+  };
+
+  const handleWallTileDimensionChange = (field: keyof TileDimensions, value: number) => {
+    const newDimensions = { ...wallTileDimensions, [field]: value };
+    setWallTileDimensions(newDimensions);
+    updateWallTileParams(newDimensions);
+  };
+
+  const handleFloorTileSelect = (file: File) => {
+    onFloorTileSelect(file, floorTileDimensions);
+    updateFloorTileParams(floorTileDimensions);
+  };
+
+  const handleWallTileSelect = (file: File) => {
+    onWallTileSelect(file, wallTileDimensions);
+    updateWallTileParams(wallTileDimensions);
+  };
+
+  const handleProcess = () => {
+    onProcess(
+      roomDimensions,
+      (renovationType === 'floor-tiling' || renovationType === 'complete-tiling' || renovationType === 'floor-tiling-wall-coloring') 
+        ? floorTileDimensions : undefined,
+      (renovationType === 'wall-tiling' || renovationType === 'complete-tiling') 
+        ? wallTileDimensions : undefined
+    );
+  };
+
   return (
     <div className="w-96 bg-white shadow-lg flex flex-col h-screen">
       {/* Header - Fixed */}
@@ -69,6 +184,86 @@ export default function RoomRenovationSidebar({
             selectedType={renovationType}
             onTypeChange={setRenovationType}
           />
+
+          {/* Room Dimensions - Only show when needed */}
+          {renovationType !== 'wall-coloring' && (
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg text-gray-900">
+                {renovationType === 'wall-tiling' ? 'Wall Dimensions' : 'Room Dimensions'}
+              </h3>
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {renovationType === 'wall-tiling' ? 'Wall Length (feet)' : 'Room Length (feet)'}
+                    </label>
+                    <input
+                      type="number"
+                      value={roomDimensions.length}
+                      onChange={(e) => handleRoomDimensionChange('length', Number(e.target.value))}
+                      min="1"
+                      max="100"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {renovationType === 'wall-tiling' ? 'Wall Height (feet)' : 'Room Width (feet)'}
+                    </label>
+                    <input
+                      type="number"
+                      value={renovationType === 'wall-tiling' ? (roomDimensions.height || 9) : roomDimensions.width}
+                      onChange={(e) => handleRoomDimensionChange(
+                        renovationType === 'wall-tiling' ? 'height' : 'width', 
+                        Number(e.target.value)
+                      )}
+                      min="1"
+                      max={renovationType === 'wall-tiling' ? "20" : "100"}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                
+                {/* Show different area calculations based on type */}
+                <div className="mt-3 text-sm text-gray-600">
+                  {renovationType === 'wall-tiling' ? (
+                    <>
+                      Wall area: {roomDimensions.length * (roomDimensions.height || 9)} sq ft
+                      <div className="text-xs text-gray-500 mt-1">
+                        Length: {roomDimensions.length}ft × Height: {roomDimensions.height || 9}ft
+                      </div>
+                    </>
+                  ) : renovationType === 'complete-tiling' ? (
+                    <>
+                      Floor area: {roomDimensions.length * roomDimensions.width} sq ft
+                      {(roomDimensions.height || 9) !== 9 && (
+                        <div>Wall area: {roomDimensions.length * (roomDimensions.height || 9)} sq ft</div>
+                      )}
+                    </>
+                  ) : (
+                    <>Floor area: {roomDimensions.length * roomDimensions.width} sq ft</>
+                  )}
+                </div>
+                
+                {/* Add wall height for complete tiling */}
+                {renovationType === 'complete-tiling' && (
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Wall Height (feet) - for wall tiles
+                    </label>
+                    <input
+                      type="number"
+                      value={roomDimensions.height || 9}
+                      onChange={(e) => handleRoomDimensionChange('height', Number(e.target.value))}
+                      min="6"
+                      max="20"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Image Uploads */}
           <div className="space-y-4">
@@ -88,67 +283,151 @@ export default function RoomRenovationSidebar({
             {(renovationType === 'floor-tiling' ||
               renovationType === 'complete-tiling' ||
               renovationType === 'floor-tiling-wall-coloring') && (
-                <TileSelectionPanel
-                  label="Floor"
-                  selectedTile={floorTile}
-                  selectedTilePreview={floorTilePreview}
-                  onTileSelect={onFloorTileSelect}
-                  tileType="floor"
-                />
+                <div className="space-y-4">
+                  <TileSelectionPanel
+                    label="Floor"
+                    selectedTile={floorTile}
+                    selectedTilePreview={floorTilePreview}
+                    onTileSelect={handleFloorTileSelect}
+                    tileType="floor"
+                  />
+                  
+                  {/* Floor Tile Dimensions */}
+                  {floorTile && (
+                    <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <h4 className="font-medium text-gray-800 mb-3">Floor Tile Dimensions</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Length (inches)
+                          </label>
+                          <input
+                            type="number"
+                            value={floorTileDimensions.length}
+                            onChange={(e) => handleFloorTileDimensionChange('length', Number(e.target.value))}
+                            min="1"
+                            max="48"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Width (inches)
+                          </label>
+                          <input
+                            type="number"
+                            value={floorTileDimensions.width}
+                            onChange={(e) => handleFloorTileDimensionChange('width', Number(e.target.value))}
+                            min="1"
+                            max="48"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      </div>
+                      <div className="mt-3 text-sm text-gray-600">
+                        Calculated tiles: {floorParams.tilesX} × {floorParams.tilesY} = {floorParams.tilesX * floorParams.tilesY} tiles
+                        <div className="text-xs text-gray-500 mt-1">
+                          Floor layout: {floorParams.tilesX} tiles along {roomDimensions.length}ft length, {floorParams.tilesY} tiles along {roomDimensions.width}ft width
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
 
             {/* Wall Tile Selection - Required for wall tiling types */}
             {(renovationType === 'wall-tiling' ||
               renovationType === 'complete-tiling') && (
-                <TileSelectionPanel
-                  label="Wall"
-                  selectedTile={wallTile}
-                  selectedTilePreview={wallTilePreview}
-                  onTileSelect={onWallTileSelect}
-                  tileType="wall"
-                />
+                <div className="space-y-4">
+                  <TileSelectionPanel
+                    label="Wall"
+                    selectedTile={wallTile}
+                    selectedTilePreview={wallTilePreview}
+                    onTileSelect={handleWallTileSelect}
+                    tileType="wall"
+                  />
+                  
+                  {/* Wall Tile Dimensions */}
+                  {wallTile && (
+                    <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                      <h4 className="font-medium text-gray-800 mb-3">Wall Tile Dimensions</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Length (inches)
+                          </label>
+                          <input
+                            type="number"
+                            value={wallTileDimensions.length}
+                            onChange={(e) => handleWallTileDimensionChange('length', Number(e.target.value))}
+                            min="1"
+                            max="48"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Width (inches)
+                          </label>
+                          <input
+                            type="number"
+                            value={wallTileDimensions.width}
+                            onChange={(e) => handleWallTileDimensionChange('width', Number(e.target.value))}
+                            min="1"
+                            max="48"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      </div>
+                      <div className="mt-3 text-sm text-gray-600">
+                        Calculated tiles: {wallParams.tilesX} × {wallParams.tilesY} = {wallParams.tilesX * wallParams.tilesY} tiles
+                        <div className="text-xs text-gray-500 mt-1">
+                          Wall layout: {wallParams.tilesX} tiles along {roomDimensions.length}ft length, {wallParams.tilesY} tiles up {roomDimensions.height || 9}ft height
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
           </div>
 
-          {/* Parameters */}
+          {/* Grout Color Parameters */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-lg text-gray-900">Parameters</h3>
+            <h3 className="font-semibold text-lg text-gray-900">Grout Settings</h3>
 
-            {/* Floor Tile Parameters */}
+            {/* Floor Grout Color */}
             {(renovationType === 'floor-tiling' ||
               renovationType === 'complete-tiling' ||
               renovationType === 'floor-tiling-wall-coloring') && (
-                <TileParameters
-                  tilesX={floorParams.tilesX}
-                  tilesY={floorParams.tilesY}
-                  groutWidth={floorParams.groutWidth}
-                  groutColor={floorParams.groutColor}
-                  onTilesXChange={(value) => setFloorParams(prev => ({ ...prev, tilesX: value }))}
-                  onTilesYChange={(value) => setFloorParams(prev => ({ ...prev, tilesY: value }))}
-                  onGroutColorChange={(color) => setFloorParams(prev => ({ ...prev, groutColor: color }))}
-                  prefix="Floor"
-                />
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium text-gray-800 mb-3">Floor Grout</h4>
+                  <ColorPicker
+                    label="Grout Color"
+                    value={floorParams.groutColor}
+                    onChange={(color) => setFloorParams(prev => ({ ...prev, groutColor: color }))}
+                    description="Color of the grout lines between floor tiles"
+                  />
+                </div>
               )}
 
-            {/* Wall Tile Parameters */}
+            {/* Wall Grout Color */}
             {(renovationType === 'wall-tiling' || renovationType === 'complete-tiling') && (
-                <TileParameters
-                  tilesX={wallParams.tilesX}
-                  tilesY={wallParams.tilesY}
-                  groutWidth={wallParams.groutWidth}
-                  groutColor={wallParams.groutColor}
-                  onTilesXChange={(value) => setWallParams(prev => ({ ...prev, tilesX: value }))}
-                  onTilesYChange={(value) => setWallParams(prev => ({ ...prev, tilesY: value }))}
-                  onGroutColorChange={(color) => setWallParams(prev => ({ ...prev, groutColor: color }))}
-                  prefix="Wall"
-                />
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium text-gray-800 mb-3">Wall Grout</h4>
+                  <ColorPicker
+                    label="Grout Color"
+                    value={wallParams.groutColor}
+                    onChange={(color) => setWallParams(prev => ({ ...prev, groutColor: color }))}
+                    description="Color of the grout lines between wall tiles"
+                  />
+                </div>
             )}
 
             {/* Wall Color Picker */}
             {(renovationType === 'wall-coloring' ||
               renovationType === 'floor-tiling-wall-coloring') && (
                 <div className="p-4 bg-gray-50 rounded-lg">
-                  <h4 className="font-medium text-gray-800 mb-4">Wall Color</h4>
+                  <h4 className="font-medium text-gray-800 mb-3">Wall Color</h4>
                   <ColorPicker
                     label="Wall Color"
                     value={wallColor}
@@ -173,7 +452,7 @@ export default function RoomRenovationSidebar({
         )}
 
         <button
-          onClick={onProcess}
+          onClick={handleProcess}
           disabled={!canProcess || isProcessing}
           className={`
             w-full py-3 px-4 rounded-lg font-medium transition-all duration-200

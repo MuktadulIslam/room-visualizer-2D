@@ -124,8 +124,8 @@ export default function TileSelectionPanel({
                 </span>
                 <span className="block text-sm text-blue-700">
                   {selectedPresetTile
-                    ? `${selectedPresetTile.size[0]}×${selectedPresetTile.size[1]}inch - ${selectedPresetTile.is_glossy ? 'Glossy' : 'Matt'}`
-                    : 'Custom uploaded tile'
+                    ? `Default: ${selectedPresetTile.size[0]}×${selectedPresetTile.size[1]}inch - ${selectedPresetTile.is_glossy ? 'Glossy' : 'Matt'}`
+                    : 'Custom uploaded tile - specify dimensions below'
                   }
                 </span>
               </div>
@@ -147,7 +147,7 @@ export default function TileSelectionPanel({
       <div className="space-y-4">
         {/* Preset Tiles Section */}
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-3"> {label} Preset Tiles</h4>
+          <h4 className="text-sm font-medium text-gray-700 mb-3">{label} Preset Tiles</h4>
           <div className="grid grid-cols-3 gap-2 pr-0.5 max-h-56 overflow-y-auto">
             {availableTextures.map((texture) => (
               <button
@@ -175,8 +175,9 @@ export default function TileSelectionPanel({
                 <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-60 transition-opacity duration-200 flex flex-col items-center justify-center">
                   <div className="text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-center px-1">
                     <p className="font-semibold">{texture.name}</p>
-                    <p className="text-xs opacity-90">{texture.size[0]}×{texture.size[1]}inch</p>
+                    <p className="text-xs opacity-90">Default: {texture.size[0]}×{texture.size[1]}inch</p>
                     <p className="text-xs opacity-90">{texture.is_glossy ? 'Glossy' : 'Matt'}</p>
+                    <p className="text-xs opacity-75 mt-1">Click to select</p>
                   </div>
                 </div>
 
@@ -190,7 +191,6 @@ export default function TileSelectionPanel({
                     </div>
                   </div>
                 )}
-
               </button>
             ))}
           </div>
@@ -243,6 +243,9 @@ export default function TileSelectionPanel({
             <div className="text-xs text-gray-500 mt-1">
               PNG, JPG, JPEG up to 10MB
             </div>
+            <div className="text-xs text-gray-400 mt-2">
+              💡 Image will be auto-cropped to match your tile dimensions
+            </div>
 
             <input
               ref={fileInputRef}
@@ -251,6 +254,26 @@ export default function TileSelectionPanel({
               accept="image/*"
               onChange={handleFileInput}
             />
+          </div>
+        </div>
+      </div>
+
+      {/* Helpful Information */}
+      <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <div className="flex items-start">
+          <svg className="w-5 h-5 text-yellow-400 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+          <div className="text-sm text-yellow-800">
+            <p className="font-medium">Smart Image Processing</p>
+            <p className="mt-1">
+              After selecting a tile, specify its dimensions below. The system will automatically:
+            </p>
+            <ul className="mt-2 space-y-1 text-xs">
+              <li>• Calculate how many tiles fit in your room</li>
+              <li>• Crop the image to match the tile proportions</li>
+              <li>• Generate the perfect tile layout</li>
+            </ul>
           </div>
         </div>
       </div>

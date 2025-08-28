@@ -4,7 +4,32 @@ import { useState } from 'react';
 import Image from 'next/image';
 import RoomRenovationSidebar from '@/components/custom_room/RoomRenovationSidebar';
 import { RenovationType } from '@/components/custom_room/RenovationTypes';
-import { RoomRenovationAPI, TilingParams, CompleteTilingParams } from '@/lib/api';
+import { RoomRenovationAPI } from '@/lib/api';
+import { cropImageToTileRatio, needsCropping, TileDimensions } from '@/lib/imageCropping';
+
+interface RoomDimensions {
+  length: number; // in feet - room length
+  width: number;  // in feet - room width  
+  height?: number; // in feet - wall height (only needed for wall tiling)
+}
+
+interface TilingParams {
+  tilesX: number;
+  tilesY: number;
+  groutWidth: number;
+  groutColor: string;
+}
+
+interface CompleteTilingParams extends TilingParams {
+  floorTilesX: number;
+  floorTilesY: number;
+  wallTilesX: number;
+  wallTilesY: number;
+  floorGroutWidth: number;
+  wallGroutWidth: number;
+  floorGroutColor: string;
+  wallGroutColor: string;
+}
 
 export default function CustomRoomPage() {
   // State for renovation type
@@ -14,6 +39,10 @@ export default function CustomRoomPage() {
   const [roomImage, setRoomImage] = useState<File | null>(null);
   const [floorTile, setFloorTile] = useState<File | null>(null);
   const [wallTile, setWallTile] = useState<File | null>(null);
+  
+  // State for cropped tiles (these will be sent to backend)
+  const [croppedFloorTile, setCroppedFloorTile] = useState<File | null>(null);
+  const [croppedWallTile, setCroppedWallTile] = useState<File | null>(null);
 
   // State for preview URLs
   const [roomPreview, setRoomPreview] = useState<string>('');
@@ -49,18 +78,111 @@ export default function CustomRoomPage() {
     setRoomPreview(URL.createObjectURL(file));
   };
 
-  const handleFloorTileSelect = (file: File) => {
+  const handleFloorTileSelect = async (file: File, dimensions?: TileDimensions) => {
     setFloorTile(file);
     setFloorTilePreview(URL.createObjectURL(file));
+
+    // Crop the image if dimensions are provided
+    if (dimensions) {
+      try {
+        const shouldCrop = await needsCropping(file, dimensions);
+        
+        if (shouldCrop) {
+          console.log('Cropping floor tile to match aspect ratio...');
+          const cropResult = await cropImageToTileRatio(file, dimensions, `floor_tile_${dimensions.length}x${dimensions.width}.jpg`);
+          setCroppedFloorTile(cropResult.croppedFile);
+          
+          // Update preview with cropped image
+          const croppedPreview = URL.createObjectURL(cropResult.croppedFile);
+          setFloorTilePreview(croppedPreview);
+          
+          console.log('Floor tile cropped:', {
+            original: cropResult.originalDimensions,
+            cropped: cropResult.croppedDimensions,
+            targetAspectRatio: cropResult.aspectRatio
+          });
+        } else {
+          console.log('Floor tile aspect ratio is already correct, no cropping needed');
+          setCroppedFloorTile(file);
+        }
+      } catch (error) {
+        console.error('Error processing floor tile:', error);
+        setError('Failed to process floor tile image');
+        setCroppedFloorTile(file); // Use original if cropping fails
+      }
+    } else {
+      setCroppedFloorTile(file);
+    }
   };
 
-  const handleWallTileSelect = (file: File) => {
+  const handleWallTileSelect = async (file: File, dimensions?: TileDimensions) => {
     setWallTile(file);
     setWallTilePreview(URL.createObjectURL(file));
+
+    // Crop the image if dimensions are provided
+    if (dimensions) {
+      try {
+        const shouldCrop = await needsCropping(file, dimensions);
+        
+        if (shouldCrop) {
+          console.log('Cropping wall tile to match aspect ratio...');
+          const cropResult = await cropImageToTileRatio(file, dimensions, `wall_tile_${dimensions.length}x${dimensions.width}.jpg`);
+          setCroppedWallTile(cropResult.croppedFile);
+          
+          // Update preview with cropped image
+          const croppedPreview = URL.createObjectURL(cropResult.croppedFile);
+          setWallTilePreview(croppedPreview);
+          
+          console.log('Wall tile cropped:', {
+            original: cropResult.originalDimensions,
+            cropped: cropResult.croppedDimensions,
+            targetAspectRatio: cropResult.aspectRatio
+          });
+        } else {
+          console.log('Wall tile aspect ratio is already correct, no cropping needed');
+          setCroppedWallTile(file);
+        }
+      } catch (error) {
+        console.error('Error processing wall tile:', error);
+        setError('Failed to process wall tile image');
+        setCroppedWallTile(file); // Use original if cropping fails
+      }
+    } else {
+      setCroppedWallTile(file);
+    }
+  };
+
+  // Calculate repetition based on room and tile dimensions
+  const calculateRepetition = (roomDim: RoomDimensions, tileDim: TileDimensions, isWall: boolean = false) => {
+    if (isWall) {
+      // For walls: use room length as wall length, wall height as wall width
+      const wallLengthInches = roomDim.length * 12;
+      const wallHeightInches = (roomDim.height || 9) * 12;
+      
+      // Calculate how many tiles fit on the wall
+      const tilesX = Math.ceil(wallLengthInches / tileDim.length);
+      const tilesY = Math.ceil(wallHeightInches / tileDim.width);
+      
+      return { tilesX, tilesY };
+    } else {
+      // For floor: use room length and width
+      const roomLengthInches = roomDim.length * 12;
+      const roomWidthInches = roomDim.width * 12;
+      
+      // Calculate how many tiles fit
+      const tilesX = Math.ceil(roomLengthInches / tileDim.length);
+      const tilesY = Math.ceil(roomWidthInches / tileDim.width);
+      
+      return { tilesX, tilesY };
+    }
   };
 
   // Process renovation
-  const handleProcess = async () => {
+  const handleProcess = async (
+    roomDimensions: RoomDimensions, 
+    floorTileDimensions?: TileDimensions, 
+    wallTileDimensions?: TileDimensions
+  ) => {
     if (!roomImage) {
       setError('Please upload a room image');
       return;
@@ -73,52 +195,73 @@ export default function CustomRoomPage() {
     try {
       let resultBlob: Blob;
 
+      // Calculate actual tile repetitions based on dimensions
+      const floorRepetition = floorTileDimensions ? calculateRepetition(roomDimensions, floorTileDimensions, false) : null;
+      const wallRepetition = wallTileDimensions ? calculateRepetition(roomDimensions, wallTileDimensions, true) : null;
+
       switch (renovationType) {
         case 'floor-tiling':
-          if (!floorTile) {
-            setError('Please select a floor tile');
+          if (!croppedFloorTile || !floorRepetition) {
+            setError('Please select a floor tile and specify dimensions');
             return;
           }
-          resultBlob = await RoomRenovationAPI.floorTiling(roomImage, floorTile, floorParams);
+          const floorTilingParams = {
+            ...floorParams,
+            tilesX: floorRepetition.tilesX,
+            tilesY: floorRepetition.tilesY
+          };
+          resultBlob = await RoomRenovationAPI.floorTiling(roomImage, croppedFloorTile, floorTilingParams);
           break;
 
         case 'complete-tiling':
-          if (!floorTile || !wallTile) {
-            setError('Please select both floor and wall tiles');
+          if (!croppedFloorTile || !croppedWallTile || !floorRepetition || !wallRepetition) {
+            setError('Please select both floor and wall tiles with dimensions');
             return;
           }
           const completeParams: CompleteTilingParams = {
             ...floorParams,
-            floorTilesX: floorParams.tilesX,
-            floorTilesY: floorParams.tilesY,
-            wallTilesX: wallParams.tilesX,
-            wallTilesY: wallParams.tilesY,
+            floorTilesX: floorRepetition.tilesX,
+            floorTilesY: floorRepetition.tilesY,
+            wallTilesX: wallRepetition.tilesX,
+            wallTilesY: wallRepetition.tilesY,
             floorGroutWidth: floorParams.groutWidth,
             wallGroutWidth: wallParams.groutWidth,
             floorGroutColor: floorParams.groutColor,
             wallGroutColor: wallParams.groutColor
           };
-          resultBlob = await RoomRenovationAPI.completeTiling(roomImage, floorTile, wallTile, completeParams);
+          resultBlob = await RoomRenovationAPI.completeTiling(roomImage, croppedFloorTile, croppedWallTile, completeParams);
           break;
 
         case 'wall-tiling':
-          if (!wallTile) {
-            setError('Please select a wall tile');
+          if (!croppedWallTile || !wallRepetition) {
+            setError('Please select a wall tile and specify dimensions');
             return;
           }
-          resultBlob = await RoomRenovationAPI.wallTiling(roomImage, wallTile, wallParams);
+          const wallTilingParams = {
+            ...wallParams,
+            tilesX: wallRepetition.tilesX,
+            tilesY: wallRepetition.tilesY
+          };
+          resultBlob = await RoomRenovationAPI.wallTiling(roomImage, croppedWallTile, wallTilingParams);
           break;
 
         case 'wall-coloring':
+          // Wall coloring doesn't need dimensions - just room image and color
           resultBlob = await RoomRenovationAPI.wallColoring(roomImage, wallColor);
+          console.log('Wall coloring completed - no dimensions needed');
           break;
 
         case 'floor-tiling-wall-coloring':
-          if (!floorTile) {
-            setError('Please select a floor tile');
+          if (!croppedFloorTile || !floorRepetition) {
+            setError('Please select a floor tile and specify dimensions');
             return;
           }
-          resultBlob = await RoomRenovationAPI.floorTilingWallColoring(roomImage, floorTile, wallColor, floorParams);
+          const floorWallParams = {
+            ...floorParams,
+            tilesX: floorRepetition.tilesX,
+            tilesY: floorRepetition.tilesY
+          };
+          resultBlob = await RoomRenovationAPI.floorTilingWallColoring(roomImage, croppedFloorTile, wallColor, floorWallParams);
           break;
 
         default:
@@ -129,7 +272,17 @@ export default function CustomRoomPage() {
       const resultUrl = URL.createObjectURL(resultBlob);
       setResultImage(resultUrl);
 
+      console.log('Renovation completed successfully', {
+        renovationType,
+        roomDimensions,
+        floorTileDimensions,
+        wallTileDimensions,
+        floorRepetition,
+        wallRepetition
+      });
+
     } catch (err) {
+      console.error('Renovation error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred during processing');
     } finally {
       setIsProcessing(false);
@@ -189,6 +342,13 @@ export default function CustomRoomPage() {
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <p className="text-gray-600 text-lg font-medium">Processing your renovation...</p>
             <p className="text-gray-500 text-sm mt-2">This may take 30-60 seconds</p>
+            <div className="mt-4 p-4 bg-white rounded-lg shadow-sm">
+              <p className="text-sm text-gray-600">
+                ⚙️ Calculating tile layout<br/>
+                🖼️ Processing images<br/>
+                🎨 Applying renovation
+              </p>
+            </div>
           </div>
         ) : resultImage ? (
           <div className="w-full h-full flex items-center justify-center">
@@ -217,6 +377,14 @@ export default function CustomRoomPage() {
                 </svg>
                 <span>Download</span>
               </button>
+              
+              {/* Show renovation info overlay */}
+              <div className="absolute bottom-2 left-2 bg-black bg-opacity-75 text-white p-3 rounded-lg text-sm">
+                <p className="font-semibold">Renovation Applied</p>
+                <p>Type: {renovationType.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
+                {floorTile && <p>🟫 Floor tiles processed and applied</p>}
+                {wallTile && <p>🟦 Wall tiles processed and applied</p>}
+              </div>
             </div>
           </div>
         ) : roomPreview ? (
@@ -251,6 +419,17 @@ export default function CustomRoomPage() {
             </svg>
             <h3 className="text-lg font-medium text-gray-900 mb-2">No room image uploaded</h3>
             <p className="text-gray-600">Upload a room image from the sidebar to begin renovation</p>
+            <div className="mt-4 p-4 bg-white rounded-lg shadow-sm max-w-md mx-auto">
+              <h4 className="font-semibold text-gray-800 mb-2">How it works:</h4>
+              <ol className="text-sm text-gray-600 text-left space-y-1">
+                <li>1. Upload your room image</li>
+                <li>2. Enter room dimensions (feet)</li>
+                <li>3. Select tile pattern & enter tile size (inches)</li>
+                <li>4. AI will automatically calculate tile layout</li>
+                <li>5. Images are auto-cropped to match tile proportions</li>
+                <li>6. Get your renovated room preview!</li>
+              </ol>
+            </div>
           </div>
         )}
       </div>
