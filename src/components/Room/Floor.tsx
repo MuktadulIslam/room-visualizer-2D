@@ -23,11 +23,23 @@ export default function Floor ({ length, width }: FloorProps) {
         let texture;
         
         if (showFloorGrout) {
-            // Create texture with grout lines
-            texture = createTextureWithGrout(baseTexture, floorGroutColor, true);
+            // Create texture with grout lines and aspect ratio cropping
+            texture = createTextureWithGrout(
+                baseTexture, 
+                floorGroutColor, 
+                true,
+                floorTexture.size[0], // tile width in inch
+                floorTexture.size[1]  // tile height in inch
+            );
         } else {
-            // Use original texture directly without any processing
-            texture = baseTexture.clone();
+            // Use texture without grout but still apply cropping if needed
+            texture = createTextureWithGrout(
+                baseTexture, 
+                floorGroutColor, 
+                false,
+                floorTexture.size[0], // tile width in inch
+                floorTexture.size[1]  // tile height in inch
+            );
         }
 
         // Configure texture mapping - FIXED CALCULATION
@@ -42,8 +54,8 @@ export default function Floor ({ length, width }: FloorProps) {
             const tilesAlongWidth = floorWidthCm / floorTexture.size[1];
             
             // Apply repetition threshold
-            const repeatX = tilesAlongLength * repetitionThreshold*1.2;
-            const repeatY = tilesAlongWidth * repetitionThreshold*1.7;
+            const repeatX = tilesAlongLength * repetitionThreshold * 1.2;
+            const repeatY = tilesAlongWidth * repetitionThreshold * 1.7;
 
             console.log('Floor texture details:', {
                 floorDimensions: { length, width },
@@ -51,7 +63,10 @@ export default function Floor ({ length, width }: FloorProps) {
                 tileSize: floorTexture.size,
                 tilesCount: { x: tilesAlongLength, y: tilesAlongWidth },
                 finalRepeats: { x: repeatX, y: repeatY },
-                groutVisible: showFloorGrout
+                groutVisible: showFloorGrout,
+                tileCropped: baseTexture.image ? 
+                    Math.abs((baseTexture.image.width / baseTexture.image.height) - (floorTexture.size[0] / floorTexture.size[1])) > 0.05 
+                    : false
             });
 
             texture.wrapS = RepeatWrapping;

@@ -27,18 +27,39 @@ export default function Wall({ height, width, position }: WallProps) {
         let texture;
 
         if (showWallGrout) {
-            // Create texture with grout lines
-            texture = createTextureWithGrout(baseTexture, wallGroutColor, true);
+            // Create texture with grout lines and aspect ratio cropping
+            texture = createTextureWithGrout(
+                baseTexture, 
+                wallGroutColor, 
+                true,
+                wallTexture.size[0], // tile width in inch
+                wallTexture.size[1]  // tile height in inch
+            );
         } else {
-            // Use original texture directly without any processing
-            texture = baseTexture.clone();
+            // Use texture without grout but still apply cropping if needed
+            texture = createTextureWithGrout(
+                baseTexture, 
+                wallGroutColor, 
+                false,
+                wallTexture.size[0], // tile width in inch
+                wallTexture.size[1]  // tile height in inch
+            );
         }
 
         // Configure texture mapping
         if (wallTexture.size) {
             const repeatX = (width * 100) / wallTexture.size[0] * repetitionThreshold;
             const repeatY = (height * 100) / wallTexture.size[1] * repetitionThreshold;
-            console.log('Wall texture repeats:', repeatX, repeatY);
+            
+            console.log('Wall texture details:', {
+                wallDimensions: { height, width },
+                tileSize: wallTexture.size,
+                finalRepeats: { x: repeatX, y: repeatY },
+                groutVisible: showWallGrout,
+                tileCropped: baseTexture.image ? 
+                    Math.abs((baseTexture.image.width / baseTexture.image.height) - (wallTexture.size[0] / wallTexture.size[1])) > 0.05 
+                    : false
+            });
 
             texture.wrapS = RepeatWrapping;
             texture.wrapT = RepeatWrapping;
