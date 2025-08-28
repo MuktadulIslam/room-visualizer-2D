@@ -1,5 +1,5 @@
 // lib/api.ts
-const API_BASE_URL = 'https://roomvisualizer.streamstech.com/api/';
+const API_BASE_URL = 'https://roomvisualizer.streamstech.com/api';
 // const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export interface TilingParams {
