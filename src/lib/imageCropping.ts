@@ -34,7 +34,7 @@ export async function cropImageToTileRatio(
       return;
     }
 
-    img.onload = () => {
+    img.onload = (ev: Event) => {
       try {
         const originalWidth = img.naturalWidth;
         const originalHeight = img.naturalHeight;
@@ -111,7 +111,7 @@ export async function cropImageToTileRatio(
       }
     };
 
-    img.onerror = () => {
+    img.onerror = (ev: string | Event) => {
       reject(new Error('Failed to load image'));
     };
 
@@ -119,10 +119,26 @@ export async function cropImageToTileRatio(
     const objectURL = URL.createObjectURL(file);
     img.src = objectURL;
     
-    // Clean up object URL when done
-    img.onload = () => {
+    // Clean up object URL when image loads or errors
+    const cleanup = () => {
       URL.revokeObjectURL(objectURL);
-      img.onload(); // Call original onload
+    };
+    
+    const originalOnLoad = img.onload;
+    const originalOnError = img.onerror;
+    
+    img.onload = (ev: Event) => {
+      cleanup();
+      if (originalOnLoad) {
+        originalOnLoad.call(img, ev);
+      }
+    };
+    
+    img.onerror = (ev: string | Event) => {
+      cleanup();
+      if (originalOnError) {
+        originalOnError.call(img, ev);
+      }
     };
   });
 }
@@ -141,22 +157,32 @@ export async function needsCropping(
 ): Promise<boolean> {
   return new Promise((resolve, reject) => {
     const img = new Image();
+    const objectURL = URL.createObjectURL(file);
     
-    img.onload = () => {
-      const imageAspectRatio = img.naturalWidth / img.naturalHeight;
-      const targetAspectRatio = tileDimensions.length / tileDimensions.width;
-      const difference = Math.abs(imageAspectRatio - targetAspectRatio);
-      
-      resolve(difference > tolerance);
-      URL.revokeObjectURL(img.src);
+    const cleanup = () => {
+      URL.revokeObjectURL(objectURL);
+    };
+    
+    img.onload = (ev: Event) => {
+      try {
+        const imageAspectRatio = img.naturalWidth / img.naturalHeight;
+        const targetAspectRatio = tileDimensions.length / tileDimensions.width;
+        const difference = Math.abs(imageAspectRatio - targetAspectRatio);
+        
+        resolve(difference > tolerance);
+      } catch (error) {
+        reject(error);
+      } finally {
+        cleanup();
+      }
     };
 
-    img.onerror = () => {
+    img.onerror = (ev: string | Event) => {
+      cleanup();
       reject(new Error('Failed to load image for aspect ratio check'));
-      URL.revokeObjectURL(img.src);
     };
 
-    img.src = URL.createObjectURL(file);
+    img.src = objectURL;
   });
 }
 
@@ -168,19 +194,29 @@ export async function needsCropping(
 export async function getImageAspectRatio(file: File): Promise<number> {
   return new Promise((resolve, reject) => {
     const img = new Image();
+    const objectURL = URL.createObjectURL(file);
     
-    img.onload = () => {
-      const aspectRatio = img.naturalWidth / img.naturalHeight;
-      resolve(aspectRatio);
-      URL.revokeObjectURL(img.src);
+    const cleanup = () => {
+      URL.revokeObjectURL(objectURL);
+    };
+    
+    img.onload = (ev: Event) => {
+      try {
+        const aspectRatio = img.naturalWidth / img.naturalHeight;
+        resolve(aspectRatio);
+      } catch (error) {
+        reject(error);
+      } finally {
+        cleanup();
+      }
     };
 
-    img.onerror = () => {
+    img.onerror = (ev: string | Event) => {
+      cleanup();
       reject(new Error('Failed to load image'));
-      URL.revokeObjectURL(img.src);
     };
 
-    img.src = URL.createObjectURL(file);
+    img.src = objectURL;
   });
 }
 
@@ -198,11 +234,11 @@ export async function createCroppedPreview(
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     
-    reader.onload = () => {
+    reader.onload = (ev: ProgressEvent<FileReader>) => {
       resolve(reader.result as string);
     };
     
-    reader.onerror = () => {
+    reader.onerror = (ev: ProgressEvent<FileReader>) => {
       reject(new Error('Failed to create preview'));
     };
     
